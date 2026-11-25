@@ -14,7 +14,7 @@
   /* right and wrong are shown in white, by ticks, crosses and line style, so they never look like a term colour */
   --ok: #f2f2f2; --bad: #f2f2f2;
   /* the three term colours, at full saturation: red, green, yellow (also told apart by lightness) */
-  --term-0: #ff2a2a; --term-1: #19e64b; --term-2: #ffe500; --on-term: #000000;
+  --term-0: #ff2a2a; --term-1: #19e64b; --term-2: #ffe500; --term-3: #ffffff; --on-term: #000000;
   --right: #19e64b; --wrong: #ff2a2a;   /* the ✓ and ✕ beside each statement once an answer is checked */
   --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
   --font-body: "Barlow", "Segoe UI", Helvetica, Arial, sans-serif;
@@ -25,6 +25,57 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
+/* one of three screens shows at a time: the session settings, play (main), and the session's result */
+body[data-screen="setup"] main, body[data-screen="done"] main { display: none; }
+.screen { display: none; flex: 1; min-height: 0; overflow-y: auto; padding: clamp(10px, 2.2vh, 20px) 24px; }
+body[data-screen="setup"] #screen-setup, body[data-screen="done"] #screen-done { display: flex; }
+.panel { width: min(380px, 100%); margin: auto; display: flex; flex-direction: column; gap: clamp(12px, 2.9vh, 34px); }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: clamp(44px, 9vh, 88px); letter-spacing: .03em; line-height: .9; }
+.cap { display: block; margin-bottom: clamp(8px, 1.4vh, 14px); font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: .2em; text-transform: uppercase; line-height: 1; color: var(--ink-soft); }
+.seg { display: flex; height: clamp(40px, 5.6vh, 46px); border: 1.5px solid var(--ink); }
+.seg button { flex: 1 1 0; font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: .16em; text-transform: uppercase; line-height: 1; }
+.seg button + button { border-left: 1.5px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button:hover:not([aria-pressed="true"]) { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.hint-line { margin-top: 8px; font-size: 13.5px; line-height: 1.4; color: var(--ink-soft); }
+.big { display: flex; align-items: baseline; gap: 8px; line-height: .9; }
+.big input, .big .num { font-family: var(--font-display); font-weight: 700; font-size: clamp(52px, 10vh, 86px); white-space: nowrap; line-height: .9; letter-spacing: .01em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.big input { width: 2.25ch; min-width: 1ch; max-width: 100%; padding: 0; background: none; border: none; border-radius: 0; -moz-appearance: textfield; appearance: textfield; }
+.big input::-webkit-inner-spin-button, .big input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.big input:focus-visible { outline: none; box-shadow: 0 3px 0 var(--ink); }
+.big .unit { font-family: var(--font-display); font-weight: 600; font-size: clamp(20px, 3.4vh, 28px); color: var(--ink-soft); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.start { flex: none; height: clamp(46px, 6.4vh, 54px); background: var(--right); color: #000; font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: .22em; text-transform: uppercase; line-height: 1; }
+.start:hover { background: color-mix(in srgb, var(--right) 82%, #fff); }
+/* the result screen: smaller figures than the settings', and the list of questions scrolls inside the screen */
+#screen-done .panel { max-height: 100%; gap: clamp(10px, 2.2vh, 24px); }
+#screen-done .big .num { font-size: clamp(38px, 6.6vh, 62px); }
+#screen-done .big .unit { font-size: clamp(16px, 2.6vh, 22px); }
+#screen-done .brand { font-size: clamp(34px, 6vh, 60px); }
+.f-log { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.log { flex: 1 1 auto; min-height: 44px; max-height: 34vh; overflow-y: auto; overscroll-behavior: contain; list-style: none; border-top: 1.5px solid var(--grid); }
+.log li { display: grid; grid-template-columns: 2.4em 1.4em 1fr; align-items: center; gap: 8px; padding: 7px 2px; border-bottom: 1.5px solid var(--grid); font-family: var(--font-mono); font-size: 16px; font-variant-numeric: tabular-nums; line-height: 1; }
+.log .n { color: var(--ink-soft); }
+.log .t { text-align: right; color: var(--ink); font-size: inherit; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.log svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.log li.ok svg { color: var(--right); } .log li.off svg { color: var(--wrong); }
+.log .none { display: block; padding: 10px 2px; color: var(--ink-soft); font-family: var(--font-body); font-size: 14px; }
+/* time is up: the clock reads 00:00 in red while the question in hand is finished */
+.clock.over .time { color: var(--wrong); }
+.clock.over .go { opacity: .3; cursor: default; }
+/* the settings, on every screen: Mode, Grid shuffle, Direction shuffle, then the minutes and Start side by side */
+#screen-setup .panel { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 18px; row-gap: clamp(14px, 3.6vh, 36px); align-content: center; }
+#screen-setup .panel > * { grid-column: 1 / -1; }
+#screen-setup .seg { height: clamp(40px, 7vh, 58px); }
+#screen-setup .f-mins { order: 5; grid-column: 1; align-self: end; margin-top: clamp(0px, 2vh, 22px); }
+#screen-setup .f-mins .cap { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }   /* still read out, not shown */
+#screen-setup .start { order: 6; grid-column: 2; align-self: end; height: clamp(56px, 11vh, 92px); margin-top: clamp(0px, 2vh, 22px); }
+#screen-setup .big input { font-size: clamp(50px, 10vh, 86px); }
+@media (max-height: 640px) {
+  .screen { padding: 10px 20px; }
+  .panel { gap: 12px; }
+  .hint-line { margin-top: 5px; font-size: 12.5px; line-height: 1.3; }
+}
 body { display: flex; flex-direction: column; background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; background: none; border: none; }
@@ -38,6 +89,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
 .name { flex: none; font-family: var(--font-display); font-weight: 700; font-size: clamp(102px, 11vh, 150px); letter-spacing: .03em; line-height: .9; }
 .mid { flex: 1; min-height: 0; display: flex; gap: clamp(28px, 3vw, 64px); }
 .brief { flex: none; }
+.more { display: none; }
 .note { display: none; }
 
 .lines { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
@@ -48,18 +100,25 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
 .lines li.ok .mark { color: var(--right); }
 .lines li.off .mark { color: var(--wrong); }
 /* a term carries its colour everywhere: its name in the statements, its button, its tile on the board */
-.h0 { --c: var(--term-0); } .h1 { --c: var(--term-1); } .h2 { --c: var(--term-2); }
+.h0 { --c: var(--term-0); } .h1 { --c: var(--term-1); } .h2 { --c: var(--term-2); } .h3 { --c: var(--term-3); }
 .lines li > span:first-child { color: var(--ink); }
 .t { color: var(--c); font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
 .rel { font-weight: 400; }
+/* Closer / Farther is underlined: pointing at it or tapping it opens a short note on what it compares */
+.hint { text-decoration: underline; text-decoration-thickness: .08em; text-underline-offset: .16em; cursor: help; }
+.hint:focus-visible { outline-offset: 3px; }
+.tip { position: fixed; z-index: 10; left: 0; top: 0; max-width: min(320px, calc(100vw - 16px)); padding: 10px 13px; background: var(--ink); color: var(--paper); font-family: var(--font-body); font-size: 15px; font-weight: 500; line-height: 1.35; pointer-events: none; box-shadow: 0 6px 24px rgba(0, 0, 0, .6); }
+/* five statements (Complex) share the row; the long Closer / Farther one sets the size */
+.lines.n5 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.lines.n5 li { font-size: clamp(15px, 2.2vh, 32px); padding-left: clamp(10px, .8vw, 20px); padding-right: clamp(10px, .8vw, 20px); gap: 6px; }
 .verdict { flex: 1; min-width: 0; align-self: center; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 3vh, 40px); letter-spacing: .08em; text-transform: uppercase; line-height: 1.1; }
 .verdict.ok { color: var(--ok); } .verdict.off { color: var(--bad); }
 
 /* ---- terms: a column of large square buttons; the chosen one has its ▲ ▼ attached to its right side ---- */
 /* the terms column fills the height from the timer to the statements: three squares, then Clear and Check, evenly spaced */
-.tray { flex: none; width: clamp(210px, 26vh, 400px); display: flex; flex-direction: column; gap: var(--gap); }
+.tray { flex: none; width: var(--tray-w); display: flex; flex-direction: column; gap: var(--gap); }
 .chips { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: var(--gap); }
-.term { flex: 1 1 0; min-height: 58px; display: grid; grid-template-columns: minmax(0, 1fr) clamp(48px, 5vh, 72px); grid-template-rows: 1fr 1fr; grid-template-areas: "pick up" "pick down"; }
+.term { flex: 1 1 0; min-height: 58px; display: grid; grid-template-columns: minmax(0, 1fr) var(--arrow-w); grid-template-rows: 1fr 1fr; grid-template-areas: "pick up" "pick down"; }
 .term button { color: inherit; }
 .term button:disabled { cursor: default; }
 .term .pick { grid-area: pick; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 2px solid var(--c); background: var(--c); color: var(--on-term); font-family: var(--font-mono); }
@@ -76,9 +135,16 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
 .term .nudge:hover:not(:disabled) { background: color-mix(in srgb, var(--c) 22%, transparent); }
 .term .nudge:disabled { opacity: .3; }
 .term button:focus-visible { outline-offset: -4px; }
+/* the locked term (REF, in Complex): a small padlock in the corner of its button */
+.term .pick { position: relative; }
+.term .lock { position: absolute; top: 6px; left: 6px; width: clamp(11px, 12%, 20px); height: auto; overflow: visible; }
+.term .lock .bow { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+.term .lock .body { fill: currentColor; }
+.term.nope { animation: nope .32s ease; }
+@keyframes nope { 20% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 80% { transform: translateX(-2px); } }
 
 /* Clear and Check sit under the term squares, exactly as wide as them, one above the other */
-.acts { flex: none; display: flex; gap: var(--gap); width: calc(100% - clamp(48px, 5vh, 72px)); }
+.acts { flex: none; display: flex; gap: var(--gap); width: var(--sq-w); }
 .acts .act { aspect-ratio: 1; min-height: 0; padding: 0; display: grid; place-items: center; }
 .acts .act svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .act { flex: 1; min-height: clamp(44px, 6.5vh, 92px); padding: 10px 14px; border: 1.5px solid var(--ink); font-family: var(--font-display); font-weight: 600; font-size: clamp(17px, 2.6vh, 34px); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
@@ -118,6 +184,9 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
 .tile.off .face { stroke: var(--bad); stroke-width: 4; stroke-dasharray: 10 7; }
 .tile.answer .face { stroke: var(--ok); stroke-width: 4; }
 .tile.ghost { opacity: .4; }
+/* the white reference tile: its outlines are drawn dark, as the usual white ones would not show on it */
+.tile.h3.sel .face, .tile.h3.answer .face { stroke: #7d7d7d; }
+.tile.h3.off .face { stroke: #000; }
 .slot { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; stroke-dasharray: 7 6; }
 .sheet.pass svg { animation: pass .7s ease; }
 .sheet.fail svg { animation: fail .5s ease; }
@@ -139,24 +208,26 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
 @keyframes pass { 30% { filter: drop-shadow(0 0 12px rgba(255, 255, 255, .55)); } }
 @keyframes fail { 20% { transform: translateX(-5px); } 45% { transform: translateX(5px); } 70% { transform: translateX(-3px); } }
 
-/* ---- countdown timer: one bordered control (minutes, or time left, then Start / Stop) and a small square reset ---- */
-/* the timer sits under the rule, at the top left */
-.timer { flex: none; align-self: flex-start; display: flex; align-items: stretch; gap: 8px; height: clamp(46px, 5.6vh, 76px); }
-.clock { display: flex; align-items: stretch; border: 1.5px solid var(--ink); }
-.clock .mins, .clock .time { display: flex; align-items: center; padding: 0 12px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.clock.idle .time, .clock:not(.idle) .mins { display: none; }
-/* at rest the minutes read as a time, 25:00: the typed minutes, then a fixed :00 */
-.mins { gap: 0; color: var(--ink); }
-.mins input, .mins .sfx { font-family: var(--font-mono); font-size: clamp(24px, 3vh, 40px); font-weight: 500; letter-spacing: .01em; }
-.mins input { width: 2.1ch; height: 100%; padding: 0; text-align: right; background: none; color: var(--ink); border: none; }
-.mins input:focus-visible { outline: none; text-decoration: underline; }
-.mins input { -moz-appearance: textfield; appearance: textfield; }
-.mins input::-webkit-inner-spin-button, .mins input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-
-.time { min-width: 4.2em; font-size: clamp(24px, 3vh, 40px); font-weight: 500; letter-spacing: .01em; }
-.time.done { color: var(--north); }
-/* ▶ ❚❚ ■ as square icon buttons, as tall as the control */
-.go { flex: none; display: grid; place-items: center; height: 100%; aspect-ratio: 1 / 1; padding: 0; border-left: 1.5px solid var(--ink); }
+/* ---- the session timer, under the rule at the top left: one bordered control (the time left, then ❚❚, or ▶
+   while paused) with Abort under it. The board takes the height beside them. ---- */
+/* the term squares set the width of everything in the left column: the timer, Abort and ✕ ✓ all end on
+   the squares' right edge (the ▲ ▼ of the chosen term stand outside it) */
+main { --timer-h: clamp(46px, 5.6vh, 76px); --lead-gap: 8px; --tray-w: clamp(210px, 26vh, 400px); --arrow-w: clamp(48px, 5vh, 72px); --sq-w: calc(var(--tray-w) - var(--arrow-w));
+  --go-w: min(var(--timer-h), calc(var(--sq-w) * .3)); --clock-font: clamp(24px, 3vh, 40px); --abort-h: var(--timer-h); }
+.setup { flex: none; align-self: flex-start; position: relative; z-index: 1; display: flex; flex-direction: column; gap: var(--lead-gap); width: var(--sq-w); }
+.desk { margin-top: calc(-1 * var(--timer-h) - var(--abort-h) - var(--lead-gap) - var(--gap)); }
+.abort { flex: none; align-self: stretch; height: var(--abort-h); border: 1.5px solid var(--ink); font-family: var(--font-display); font-weight: 700; font-size: min(calc(var(--abort-h) * .4), calc(var(--sq-w) * .12)); letter-spacing: .16em; text-transform: uppercase; line-height: 1; }
+.abort:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+/* while the timer is paused: no board, a line in its place, and nothing to press but ▶ and Abort */
+.sheet.held { visibility: hidden; }
+.hold { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: 0 16px; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: clamp(20px, 4vh, 46px); letter-spacing: .14em; text-transform: uppercase; line-height: 1.2; color: var(--ink); }
+main.paused .chips, main.paused .acts, main.paused #reset-score { pointer-events: none; opacity: .35; }
+.timer { flex: none; align-self: stretch; display: flex; align-items: stretch; height: var(--timer-h); }
+.clock { flex: 1 1 auto; min-width: 0; display: flex; align-items: stretch; border: 1.5px solid var(--ink); }
+.clock .time { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 0 4px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.time { font-size: min(var(--clock-font), calc((var(--sq-w) - var(--go-w) - 12px) / 3.1)); font-weight: 500; letter-spacing: .01em; }
+/* ❚❚ / ▶ as an icon button, as tall as the control */
+.go { flex: none; display: grid; place-items: center; height: 100%; width: var(--go-w); padding: 0; border-left: 1.5px solid var(--ink); }
 .go svg { width: 62%; height: 62%; max-width: 30px; max-height: 30px; fill: currentColor; }
 .go:hover, .sq:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); }
 .sq { flex: none; aspect-ratio: 1; height: 100%; display: grid; place-items: center; border: 1.5px solid var(--ink); }
@@ -181,7 +252,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
   .mid { gap: 18px; }
   .tray { width: 170px; }
   .tray, .chips, .acts { gap: 12px; }
-  .term { grid-template-columns: minmax(0, 1fr) 40px; }
+  .term { grid-template-columns: minmax(0, 1fr) 40px; min-height: 40px; }
   .acts { width: calc(100% - 40px); }
   .act { min-height: 42px; font-size: 17px; }
   .acts .act { min-height: 0; }
@@ -189,9 +260,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
   .lines { gap: 10px; }
   .lines li { padding: 10px 14px; font-size: 22px; }
   .name { font-size: 78px; }
-  .timer { height: 40px; }
-  .mins input, .mins .sfx, .time { font-size: 20px; }
-  .time { min-width: 136px; }
+  main { --timer-h: 40px; --gap: 10px; --tray-w: 170px; --arrow-w: 40px; --clock-font: 20px; }
   .meter { --acc-h: 52px; }
 }
 @media (max-width: 860px), (max-height: 620px) {
@@ -213,14 +282,28 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
   .acts { width: calc(100% - 34px); }
   .act { min-height: 0; }
   .act { padding: 7px 8px; font-size: 15px; }
-  .timer { height: 36px; gap: 6px; }
-  .mins input, .mins .sfx { font-size: 16px; }   /* 16px, so a phone does not zoom the page when the box is tapped */
-  .clock .mins, .clock .time { padding: 0 8px; }
-  .time { min-width: 0; font-size: 16px; }
+  main { --timer-h: 36px; --lead-gap: 6px; --gap: 6px; --tray-w: 150px; --arrow-w: 34px; }
+  /* too short to stack them: Abort sits beside the timer, each at its own width, the board under both */
+  .setup { flex-direction: row; width: auto; }
+  .timer, .abort { align-self: flex-start; }
+  .abort { padding: 0 14px; font-size: 14px; }
+  .clock { flex: none; }
+  .clock .time { flex: none; padding: 0 8px; font-size: 16px; }
+  .go { width: var(--timer-h); }
+  .desk { margin-top: 0; }
   .sq svg { width: 18px; height: 18px; }
   .sheet { padding: 0; }
   .meter { gap: 10px; --acc-h: 40px; }
   .score { gap: 2px; min-width: 0; }
+}
+/* a short, wide screen (a phone on its side) in Complex: four slim terms and four statements still fit */
+@media (max-height: 620px) and (min-width: 621px) {
+  .term { min-height: 26px; }
+  .lines.n5 { gap: 6px; }
+  .lines.n5 li { font-size: 12px; padding: 4px 6px; grid-template-columns: minmax(0, 1fr) 13px; gap: 4px; }
+  main.lv3 .term .who { font-size: 16px; }
+  main.lv3 .acts .act { aspect-ratio: auto; height: 32px; }
+  main.lv3 .acts .act svg { width: auto; height: 60%; }
 }
 /* a phone (or any narrow screen): name, timer and accuracy in one row along the top; the board fills the middle with
    ✕ and ✓ stacked at its right; along the bottom, the three statements stacked on the left and the three terms as
@@ -229,11 +312,17 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
   main { display: grid; grid-template-columns: minmax(0, 46fr) minmax(0, 54fr); grid-template-rows: auto minmax(0, 1fr) clamp(170px, 31dvh, 300px); gap: 8px; padding: 8px 12px max(10px, env(safe-area-inset-bottom, 0px)); overflow: hidden; }
   .top, .mid, .tray { display: contents; }
   .note { display: none; }
-  /* the top row: the name, the timer just past it, and the accuracy (the figure over the word) with its reset at the right */
-  .name { grid-area: 1 / 1 / 2 / 3; justify-self: start; align-self: center; font-size: clamp(26px, 10vw, 44px); line-height: 1; letter-spacing: .02em; }
+  /* the top row: the name, then the timer with Abort under it, and the accuracy (the figure over the word) with
+     its reset at the right */
+  main { --timer-h: 34px; --abort-h: 22px; --lead-gap: 4px; }
+  .name { grid-area: 1 / 1 / 2 / 3; justify-self: start; align-self: center; font-size: clamp(24px, 10vw, 44px); line-height: 1; letter-spacing: .02em; }
   /* just past the name, however wide it renders (its width is measured into --name-w) */
-  .timer { grid-area: 1 / 1 / 2 / 3; justify-self: start; align-self: center; margin-left: calc(var(--name-w, 112px) + 10px); height: 42px; gap: 0; }
-  .go { aspect-ratio: auto; width: 38px; }
+  .setup { grid-area: 1 / 1 / 2 / 3; justify-self: start; align-self: center; flex-direction: column; width: auto; margin-left: calc(var(--name-w, 90px) + 9px); }
+  .clock .time { padding: 0 7px; font-size: 19px; }
+  .go { width: 36px; }
+  .timer, .abort { align-self: stretch; }
+  .abort { padding: 0; font-size: 11px; letter-spacing: .2em; }
+  .desk { margin-top: 0; }
   .meter { grid-area: 1 / 1 / 2 / 3; justify-self: end; align-self: center; gap: 7px; }
   .score { flex-direction: column; align-items: flex-end; justify-content: center; gap: 2px; }
   .score .label { font-size: 10.5px; letter-spacing: .06em; margin-right: 0; }
@@ -242,10 +331,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
   #reset-score.sq { height: 42px; width: 42px; min-height: 0; align-self: center; }
   .score { height: auto; }
   #reset-score.sq svg { width: 22px; height: 22px; }
-  .mins input, .mins .sfx { font-size: 19px; }   /* the same size as the running time */
-  .clock .mins, .clock .time { padding: 0 7px; }
-  .time { min-width: 0; font-size: 19px; }
-  .desk { grid-area: 2 / 1 / 3 / 3; margin-right: 60px; min-width: 0; min-height: 0; }
+  .desk { grid-area: 2 / 1 / 3 / 3; margin-top: 0; margin-right: 60px; min-width: 0; min-height: 0; }
   .sheet { padding: 0; }
   .verdict { grid-area: 2 / 1 / 3 / 3; justify-self: start; align-self: start; z-index: 1; pointer-events: none; text-align: left; font-size: 14px; max-width: calc(100% - 64px); }
   .verdict:empty { display: none; }
@@ -266,35 +352,127 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
   .term:not(.sel) .pick { grid-row: 1 / -1; }
   .term:not(.sel) .nudge { display: none; }
   .term .nudge { font-size: 12px; }
+  /* Complex: the five statements are a list to scroll through, three in view at a time with the next one peeking in,
+     each as large as in Simple; the four terms sit two by two */
+  main.lv3 { grid-template-rows: auto minmax(0, 1fr) clamp(190px, 34dvh, 310px); }
+  .brief { position: relative; container-type: size; }
+  .lines.n5 { display: flex; flex-direction: column; gap: 6px; height: 100%; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; touch-action: pan-y; }
+  .lines.n5::-webkit-scrollbar { display: none; }
+  .lines li.near .t { font-size: 1.3em; }   /* keeps the long Closer / Farther statement to three lines */
+  .lines.n5 li { flex: 0 0 auto; min-height: 52px; min-height: calc((100cqh - 18px) / 3.3); font-size: 12.5px; padding: 4px 8px; gap: 4px; grid-template-columns: minmax(0, 1fr) 15px; overflow: visible; scroll-snap-align: start; }
+  /* the list fades out at an edge that has more beyond it, and a small arrow there says which way */
+  .brief::before, .brief::after { content: ""; position: absolute; left: 0; right: 0; height: 30px; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .15s; }
+  .brief::before { top: 0; background: linear-gradient(to bottom, var(--paper) 10%, transparent); }
+  .brief::after { bottom: 0; background: linear-gradient(to top, var(--paper) 10%, transparent); }
+  .brief.more-up::before, .brief.more-down::after { opacity: 1; }
+  .more { position: absolute; left: 50%; z-index: 2; width: 34px; height: 20px; margin-left: -17px; display: none; place-items: center; color: var(--ink); font-size: 11px; line-height: 1; background: var(--paper); border: 1.5px solid var(--ink); }
+  .more.up { top: 0; } .more.down { bottom: 0; }
+  .brief.more-up .more.up, .brief.more-down .more.down { display: grid; }
+  .chips.n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); }
+  .chips.n4 .term .nudge { height: 28px; }
 }
 @media (max-width: 380px) {
-  .timer { height: 38px; }
-  .go { width: 34px; }
+  .clock .time { padding: 0 6px; font-size: 17px; }
+  .go { width: 32px; }
   #reset-score.sq { height: 38px; width: 38px; }
-  .mins input, .mins .sfx { font-size: 16px; }
-  .time { font-size: 16px; }
   .pct { font-size: 26px; }
   .score .label { font-size: 9.5px; }
 }
 @media (max-width: 350px) {
-  .timer { height: 34px; }
-  .go { width: 30px; }
-  .clock .mins, .clock .time { padding: 0 5px; }
+  main { --timer-h: 30px; --abort-h: 20px; padding-left: 8px; padding-right: 8px; }
+  .clock .time { padding: 0 5px; font-size: 16px; }
+  .go { width: 28px; }
+  .abort { font-size: 10px; }
   #reset-score.sq { height: 34px; width: 34px; }
-  .mins input, .mins .sfx { font-size: 16px; }   /* 16px at the least, so a phone does not zoom the page when the box is tapped */
-  .time { font-size: 16px; }
   .pct { font-size: 22px; }
-  .score .label { font-size: 8.5px; letter-spacing: .04em; }
-  .lines li { font-size: 11px; padding: 3px 6px; }
+  .score .label { font-size: 8px; letter-spacing: .03em; }
+  .meter { gap: 5px; }
+  .lines li, .lines.n5 li { font-size: 11px; padding: 3px 6px; }
   .term .who { font-size: 15px; }
   .term .nudge { height: 30px; }
+  .chips.n4 .term .nudge { height: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
 </style>
 </head>
-<body>
+<body data-screen="setup">
+
+<!-- ===== session settings: shown before every session ===== -->
+<section class="screen" id="screen-setup" aria-label="Session settings">
+  <div class="panel">
+    <h1 class="brand">isoRRT</h1>
+
+    <div class="field">
+      <span class="cap" id="cap-mode">Mode</span>
+      <div class="seg" id="opt-mode" role="group" aria-labelledby="cap-mode">
+        <button type="button" data-value="1">Simple</button>
+        <button type="button" data-value="3">Complex</button>
+      </div>
+    </div>
+
+    <div class="field f-mins">
+      <label class="cap" for="opt-minutes">Session duration</label>
+      <div class="big"><input type="number" id="opt-minutes" min="0.01" max="99" step="any" value="25" inputmode="numeric"><span class="unit">min</span></div>
+    </div>
+
+    <div class="field">
+      <span class="cap" id="cap-grid">Grid shuffle</span>
+      <div class="seg" id="opt-grid" role="group" aria-labelledby="cap-grid">
+        <button type="button" data-value="0">Off</button>
+        <button type="button" data-value="1">On</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="cap" id="cap-dirs">Direction shuffle</span>
+      <div class="seg" id="opt-dirs" role="group" aria-labelledby="cap-dirs">
+        <button type="button" data-value="0">Off</button>
+        <button type="button" data-value="1">On</button>
+      </div>
+    </div>
+
+    <button class="start" id="session-start" type="button">Start</button>
+  </div>
+</section>
+
+<!-- ===== session end: when the timer runs out, or after Abort ===== -->
+<section class="screen" id="screen-done" aria-label="Session results">
+  <div class="panel">
+    <h1 class="brand">isoRRT</h1>
+    <div class="field">
+      <span class="cap" id="done-title">Session complete</span>
+      <p class="hint-line" id="done-mode"></p>
+    </div>
+    <div class="pair">
+      <div class="field">
+        <span class="cap">Accuracy</span>
+        <div class="big"><span class="num" id="done-pct">–</span></div>
+      </div>
+      <div class="field">
+        <span class="cap">Correct</span>
+        <div class="big"><span class="num" id="done-right">0</span><span class="unit" id="done-total">of 0</span></div>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="field">
+        <span class="cap">Time</span>
+        <div class="big"><span class="num" id="done-time">0:00</span></div>
+      </div>
+      <div class="field">
+        <span class="cap">Average per question</span>
+        <div class="big"><span class="num" id="done-avg">–</span></div>
+      </div>
+    </div>
+    <!-- every question of the session: its number, right or wrong, and the time spent on it -->
+    <div class="field f-log">
+      <span class="cap" id="cap-log">Questions</span>
+      <ol class="log" id="done-log" aria-labelledby="cap-log"></ol>
+    </div>
+    <button class="start" id="session-next" type="button">Next</button>
+  </div>
+</section>
 
 <main>
   <header class="top">
@@ -306,18 +484,16 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
     </div>
   </header>
 
+    <!-- the session timer: the time left and ❚❚ (▶ while paused); under it, Abort ends the session -->
+    <div class="setup">
     <div class="timer">
-      <!-- one control: the minutes and ▶ (start); once started, the time left with ❚❚ (pause, ▶ again while paused) and ■ (stop) -->
-      <div class="clock idle">
-        <label class="mins"><input type="number" id="timer-min" min="0.01" max="99" step="any" value="25" inputmode="numeric" aria-label="Minutes"><span class="sfx" aria-hidden="true">:00</span></label>
+      <div class="clock">
         <span class="time" id="time" role="timer" aria-label="Time left">25:00</span>
-        <button class="go" id="timer-go" type="button" aria-label="Start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
-        <!-- once started: Pause (Resume while paused) and Stop, which puts the timer back to its start -->
-        <button class="go" id="timer-pause" type="button" hidden aria-label="Pause"></button>
-        <button class="go" id="timer-stop" type="button" hidden aria-label="Stop"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="5.5" width="13" height="13"/></svg></button>
+        <button class="go" id="timer-pause" type="button" aria-label="Pause"></button>
       </div>
     </div>
-
+    <button class="abort" id="abort" type="button">Abort</button>
+    </div>
 
   <section class="mid">
     <div class="tray" aria-label="Terms">
@@ -331,16 +507,23 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
     <section class="desk" aria-label="Board">
       <div class="sheet" id="sheet"></div>
       <!-- a correct answer: a big green circle with a white tick pops up in front of the board -->
+      <!-- while the timer is paused the board is hidden, and this stands in its place -->
+      <p class="hold" id="hold" hidden>Start timer to continue</p>
       <div class="win" id="win" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="47"/><path d="M28 52l15 15 30-33"/></svg></div>
     </section>
   </section>
 
   <section class="brief" aria-label="Statements">
     <ol class="lines" id="lines"></ol>
+    <!-- on a phone in Complex the statements scroll: these two say there is more above or below, and step to it -->
+    <button class="more up" id="more-up" type="button" aria-label="Earlier statements" tabindex="-1">▲</button>
+    <button class="more down" id="more-down" type="button" aria-label="More statements" tabindex="-1">▼</button>
   </section>
 
   <p class="note" id="note"></p>
 </main>
+<!-- what Closer / Farther compare: shown when the underlined word is pointed at, focused or tapped -->
+<div class="tip" id="tip" role="tooltip" hidden>Closer and Farther compare straight-line distance across the board. Height doesn’t count.</div>
 
 <script>
 (function () {
@@ -391,7 +574,26 @@ function makeLabels(n) {
   return shuffle(TERM_NAMES.slice()).slice(0, n);
 }
 
-function boardSize() { return 3; }
+/* Two modes. Simple: three terms on a 3 x 3 board. Complex: four terms on a 5 x 5 board and five statements, the
+   third of which compares two distances (Closer / Farther). In the code they are levels 1 and 3. Both boards have
+   an odd number of squares, so there is a centre square and every compass line runs through the middle of one. */
+const SIMPLE = 1, COMPLEX = 3;
+const GRADES = [SIMPLE, COMPLEX];
+const boardSize = (level) => level === COMPLEX ? 5 : 3;
+const termCount = (level) => level === COMPLEX ? 4 : 3;
+
+/* Distance across the board between two placements: the squares only, never the tier. Returned three ways:
+   straight line (squared), counting diagonal steps as one, and counting along the grid lines only. */
+function gaps(a, b) {
+  const dx = Math.abs(a[0] - b[0]), dy = Math.abs(a[1] - b[1]);
+  return [dx * dx + dy * dy, Math.max(dx, dy), dx + dy];
+}
+/* is a clearly closer to hub than c is: closer whichever of the three ways it is measured */
+function clearlyCloser(a, hub, c) {
+  const g = gaps(a, hub), h = gaps(c, hub);
+  return g[0] < h[0] && g[1] < h[1] && g[2] < h[2];
+}
+function nearWords(s) { return s.closer ? ['is ', 'Closer', ' to'] : ['is ', 'Farther', ' from']; }
 
 /* What the words mean:
      Above / Below            the tier only: higher or lower, on any square
@@ -399,13 +601,29 @@ function boardSize() { return 3; }
      North of, South of ...   the place on the grid only, on any tier: straight along that compass line
      North-East of ...        the place on the grid only: north and east, by any amounts
      Above and North of ...   both at once
-   Every question has three terms in the 3 x 3 x 3 cube and one statement for each pair of them: one about
-   height, one a compass direction (any of the eight), and a third that pairs Above/Below with a compass
-   direction. The compass letter shown by the board is always one of the eight that no statement uses. */
-function makePuzzle() {
-  const labels = makeLabels(3);
+     Closer to B than C is    straight-line distance across the board to B, compared with C's; the tier never counts
+   Simple has three terms in the 3 x 3 x 3 cube and one statement for each pair of them: one about height, one a
+   compass direction (any of the eight), and a third that pairs Above/Below with a compass direction.
+   Complex has four terms on a 5 x 5 board and five statements: height, compass, a third that is Closer / Farther,
+   a fourth that pairs height with a compass direction, and a fifth compass direction that closes a loop between
+   three of the terms. The compass letter shown by the board is always one of the eight that no statement uses. */
+function makePuzzle(level) {
+  level = GRADES.includes(level) ? level : SIMPLE;
+  const count = termCount(level), size = boardSize(level);
+  /* whether the height statement says Directly is settled first, so half the questions say it however many
+     tries each kind takes */
+  const direct = coin();
+  for (;;) {
+    const made = tryPuzzle(level, count, size, direct);
+    if (made) return made;
+  }
+}
+const REF = 'REF';                                         // the reference term of Complex: always this name, always white
+function tryPuzzle(level, count, size, direct) {
+  /* Complex: three drawn names and REF, which may play any of the four parts */
+  const labels = makeLabels(level === COMPLEX ? count - 1 : count);
+  if (level === COMPLEX) labels.splice(randInt(count), 0, REF);
   const o = randInt(8);                                      // North can point along either grid line or corner to corner
-  const size = boardSize();
   const square = () => [randInt(size), randInt(size)];
   const same = (a, b) => a[0] === b[0] && a[1] === b[1];
   /* P and R on two different squares: half the time straight along a compass line (North, East ...),
@@ -417,18 +635,29 @@ function makePuzzle() {
     rAt = square();
     d = bearing([rAt[0] - pAt[0], rAt[1] - pAt[1], 0], o);
   } while (same(pAt, rAt) || (d[0] === 0 || d[1] === 0) !== straight);
-  /* Q: on P's own square when its statement will say Directly, otherwise on any square but R's */
-  const direct = coin();
+  /* Q: on P's own square when its statement will say Directly. Otherwise, in Simple, any square but R's (its
+     other statement gives a compass direction from R); in Complex, any square at all. */
   let qAt = pAt;
-  if (!direct) do { qAt = square(); } while (same(qAt, rAt));
-  /* tiers: Q has to differ from both others, so each of its two statements can say Above or Below */
-  const pTier = randInt(LEVELS), rTier = randInt(LEVELS);
-  const qTier = pick([0, 1, 2].filter((z) => z !== pTier && z !== rTier));
-  const P = labels[0], Q = labels[1], R = labels[2];
+  if (!direct) do { qAt = square(); } while (level === SIMPLE && same(qAt, rAt));
+  const P = labels[0], Q = labels[1], R = labels[2], S = labels[3];
   const solution = {};
+  const pTier = randInt(LEVELS), rTier = randInt(LEVELS);
+  let qTier;
+  if (level === SIMPLE) qTier = pick([0, 1, 2].filter((z) => z !== pTier && z !== rTier));   // Q differs from both: each of its statements says Above or Below
+  else qTier = pick([0, 1, 2].filter((z) => z !== pTier));
   solution[P] = [pAt[0], pAt[1], pTier];
   solution[Q] = [qAt[0], qAt[1], qTier];
   solution[R] = [rAt[0], rAt[1], rTier];
+  /* the fourth term: off R's square and tier (its statement gives height and a compass direction from R), and
+     off P's square (a fifth statement gives its compass direction from P) */
+  if (S) {
+    let sAt;
+    do { sAt = square(); } while (same(sAt, rAt) || same(sAt, pAt));
+    solution[S] = [sAt[0], sAt[1], pick([0, 1, 2].filter((z) => z !== rTier))];
+  }
+  /* no two terms may share a square and a tier */
+  const spots = labels.map((w) => solution[w].join(','));
+  if (new Set(spots).size !== spots.length) return null;
   /* a statement names only the dimensions asked for, and can be told from either end */
   const tell = (a, b, flat, tall, isDirect) => {
     const s = solution[a], t = solution[b];
@@ -436,27 +665,128 @@ function makePuzzle() {
     const dir = [flat ? rel[0] : 0, flat ? rel[1] : 0, tall ? rel[2] : 0];
     return coin() ? { subject: a, anchor: b, dir, direct: isDirect } : { subject: b, anchor: a, dir: opposite(dir), direct: isDirect };
   };
-  const premises = shuffle([tell(Q, P, false, true, direct), tell(R, P, true, false, false)]).concat([tell(Q, R, true, true, false)]);
+  /* each drawn term gets one of the three colours. In Complex the fourth term, REF, is white: it starts on the
+     board, on its square of the hidden layout, and stays on that square. Only its tier can be changed. */
+  const hue = {}, hues = shuffle([0, 1, 2]);
+  labels.filter((w) => w !== REF || level !== COMPLEX).forEach((w, i) => { hue[w] = hues[i]; });
+  const pin = {};
+  if (level === COMPLEX) { hue[REF] = 3; pin[REF] = [solution[REF][0], solution[REF][1]]; }
+  let premises = shuffle([tell(Q, P, false, true, direct), tell(R, P, true, false, false)]);
+  if (level === SIMPLE) premises.push(tell(Q, R, true, true, false));
+  else {
+    /* the third statement: one term is Closer to (or Farther from) a second than a third is. Only comparisons
+       that are clear however the distance is counted are used. It never compares two terms that share a square
+       by rule (Directly), and when no statement gives Q a compass direction it always involves Q. */
+    const options = [];
+    for (const hub of labels) for (const a of labels) for (const c of labels) {
+      if (a === hub || c === hub || a === c) continue;
+      const trio = [a, hub, c];
+      if (direct ? trio.includes(P) && trio.includes(Q) : !trio.includes(Q)) continue;
+      if (clearlyCloser(solution[a], solution[hub], solution[c])) options.push(trio);
+    }
+    if (!options.length) return null;
+    const [a, hub, c] = pick(options);
+    premises.push(coin() ? { kind: 'near', subject: a, anchor: hub, other: c, closer: true, dir: [0, 0, 0] }
+      : { kind: 'near', subject: c, anchor: hub, other: a, closer: false, dir: [0, 0, 0] });
+    /* the fourth: S against R, height and compass together, so every term has a statement about its tier.
+       The fifth: the compass direction between S and P. With R-P and S-R it closes a loop, so the three have to
+       be worked out together, not one after another. */
+    premises.push(tell(S, R, true, true, false));
+    premises.push(tell(S, P, true, false, false));
+    /* every statement has to earn its place: of the layouts that satisfy the rest (with REF on its
+       square), Closer / Farther must rule out at least half, and each of the others at least a quarter */
+    const probe = { o, size, names: [P, R, S, Q], premises, pin };
+    const all = countFits(probe, -1);
+    for (const i of [2, 4, 0, 1, 3]) if (all > (i === 2 ? 0.5 : 0.75) * countFits(probe, i)) return null;
+  }
   /* every one of the eight compass directions that no statement uses; the compass letter is only ever one of these */
   const used = premises.map((s) => compassIndex(s.dir));
   const spare = [0, 1, 2, 3, 4, 5, 6, 7].filter((c) => !used.includes(c));
   const given = pick(spare);
-  /* each term gets one of the three colours */
-  const hue = {}, hues = shuffle([0, 1, 2]);
-  labels.forEach((w, i) => { hue[w] = hues[i]; });
-  return { v: 7, o, given, spare, size, names: shuffle(labels.slice()), hue, premises, solution, fixed: [], threeD: true };
+  /* the order of the term buttons: shuffled, with REF last (the bottom of the column, or the bottom right on a phone) */
+  const names = shuffle(labels.filter((w) => !pin[w])).concat(Object.keys(pin));
+  return { v: 11, level, o, given, spare, size, names, hue, pin, premises, solution, fixed: [], threeD: true };
+}
+/* does one statement hold for its terms' placements ([x, y, tier] each; c only for Closer / Farther) */
+function holds(p, o, s, a, c) {
+  if (p.kind === 'near') {                                                                  // straight-line distance across the board; tiers never count
+    const mine = gaps(s, a)[0], theirs = gaps(c, a)[0];
+    return p.closer ? mine < theirs : mine > theirs;
+  }
+  const d = bearing([s[0] - a[0], s[1] - a[1], s[2] - a[2]], o);
+  if ((p.dir[0] || p.dir[1]) && (d[0] !== p.dir[0] || d[1] !== p.dir[1])) return false;     // compass words fix the place on the grid
+  if (p.dir[2] && d[2] !== p.dir[2]) return false;                                          // Above and Below fix the tier
+  if (p.direct && (s[0] !== a[0] || s[1] !== a[1])) return false;                           // Directly: the very same square
+  return true;
 }
 /* one true/false per statement for a placement {name: [x, y, tier]} */
 function judge(puzzle, placed) {
   return puzzle.premises.map((p) => {
-    const s = placed[p.subject], a = placed[p.anchor];
-    if (!s || !a) return false;
-    const d = bearing([s[0] - a[0], s[1] - a[1], s[2] - a[2]], puzzle.o);
-    if ((p.dir[0] || p.dir[1]) && (d[0] !== p.dir[0] || d[1] !== p.dir[1])) return false;   // compass words fix the place on the grid
-    if (p.dir[2] && d[2] !== p.dir[2]) return false;                                        // Above and Below fix the tier
-    if (p.direct && (s[0] !== a[0] || s[1] !== a[1])) return false;                         // Directly: the very same square
-    return true;
+    const s = placed[p.subject], a = placed[p.anchor], c = p.kind === 'near' ? placed[p.other] : null;
+    if (!s || !a || (p.kind === 'near' && !c)) return false;
+    return holds(p, puzzle.o, s, a, c);
   });
+}
+/* How many ways of placing every term (no two on the same square and tier) satisfy all the statements, leaving out
+   statement number `skip` (-1 to leave none out). A term listed in puzzle.pin stays on the square given there.
+   Exact, and quick: where a term stands on the grid and which tier
+   it is on are counted apart. Compass words, Directly and Closer / Farther only look at squares; Above and Below
+   only at tiers; the two meet only in that terms sharing a square need different tiers. So the squares are tried
+   one term at a time (a branch is dropped as soon as a statement whose terms are all down fails), and each full
+   set of squares counts once for every set of tiers that fits it. */
+function countFits(puzzle, skip) {
+  const size = puzzle.size, names = puzzle.names, k = names.length, n = size * size, o = puzzle.o;
+  const at = {}; names.forEach((w, i) => { at[w] = i; });
+  const sq = []; for (let x = 0; x < size; x++) for (let y = 0; y < size; y++) sq.push([x, y, 0]);
+  const due = names.map(() => []), tall = [];
+  puzzle.premises.forEach((p, i) => {
+    if (i === skip) return;
+    if (p.kind === 'near') { const who = [at[p.subject], at[p.anchor], at[p.other]]; due[Math.max(...who)].push({ who, p }); return; }
+    const a = at[p.subject], b = at[p.anchor];
+    if (p.dir[2]) tall.push([a, b, p.dir[2]]);
+    if (p.dir[0] || p.dir[1] || p.direct) {
+      const flat = { subject: p.subject, anchor: p.anchor, dir: [p.dir[0], p.dir[1], 0], direct: p.direct };   // the same statement, with its height taken out
+      const table = new Uint8Array(n * n);
+      for (let u = 0; u < n; u++) for (let v = 0; v < n; v++) if (holds(flat, o, sq[u], sq[v])) table[u * n + v] = 1;
+      due[Math.max(a, b)].push({ who: [a, b], table });
+    }
+  });
+  /* every set of tiers the height statements allow */
+  const tiers = [], z = new Array(k).fill(0);
+  const climb = (i) => {
+    if (i === k) { if (tall.every((t) => Math.sign(z[t[0]] - z[t[1]]) === t[2])) tiers.push(z.slice()); return; }
+    for (let l = 0; l < LEVELS; l++) { z[i] = l; climb(i + 1); }
+  };
+  climb(0);
+  /* for a given pattern of terms sharing squares (one bit per pair), how many of those sets keep sharers apart */
+  const pairs = []; for (let i = 0; i < k; i++) for (let j = i + 1; j < k; j++) pairs.push([i, j]);
+  const ways = new Map();
+  const waysFor = (mask) => {
+    if (!ways.has(mask)) ways.set(mask, tiers.filter((t) => pairs.every((q, b) => !(mask >> b & 1) || t[q[0]] !== t[q[1]])).length);
+    return ways.get(mask);
+  };
+  const pinned = names.map((w) => (puzzle.pin && puzzle.pin[w] ? puzzle.pin[w][0] * size + puzzle.pin[w][1] : -1));
+  const put = new Array(k).fill(-1);
+  let found = 0;
+  const place = (i) => {
+    if (i === k) {
+      let mask = 0;
+      for (let b = 0; b < pairs.length; b++) if (put[pairs[b][0]] === put[pairs[b][1]]) mask |= 1 << b;
+      found += waysFor(mask);
+      return;
+    }
+    next: for (let v = pinned[i] < 0 ? 0 : pinned[i]; v < n; v++) {
+      put[i] = v;
+      for (const r of due[i]) {
+        if (r.table ? !r.table[put[r.who[0]] * n + put[r.who[1]]] : !holds(r.p, o, sq[put[r.who[0]]], sq[put[r.who[1]]], sq[put[r.who[2]]])) { if (pinned[i] >= 0) break next; continue next; }
+      }
+      place(i + 1);
+      if (pinned[i] >= 0) break;
+    }
+    put[i] = -1;
+  };
+  place(0);
+  return found;
 }
 /*LOGIC-END*/
 
@@ -466,7 +796,15 @@ const keep = {
   write(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* works without storage */ } }
 };
 const ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
-let stats = { right: 0, total: 0, streak: 0, best: 0 };
+const blankStats = () => ({ right: 0, total: 0, streak: 0, best: 0 });
+/* What the session settings screen holds, remembered between visits: the mode (1 Simple, 3 Complex), the session's
+   length in minutes, and the two shuffles. Grid shuffle: the board swings to a new angle whenever a term is placed.
+   Direction shuffle: the compass label changes to another unused direction whenever a term is placed. */
+const prefs = { mode: 1, minutes: 25, gridShuffle: true, dirShuffle: true };
+let level = 1;            // the running session's mode
+let stats = blankStats(); // the running session's score: accuracy is counted per session
+let session = null;       // { mode, length (ms), timeUp, why: 'time' | 'abort', log: [{ ms, right }], spent, since, asked }
+let paused = false;
 let game = null;          // { puzzle, placed, selected, phase: 'build' | 'review', marks, reveal, shown, angle }
 let nextHandle = null;
 
@@ -477,12 +815,18 @@ const term = (w) => '<span class="t ' + hueOf(w) + '">' + esc(w) + '</span>';
 
 /* ---------- board drawing ---------- */
 const BOARD = 512;                                        // width of the whole board on the drawing, whatever its square count
-const TW = BOARD / boardSize(), TH = TW / 2;
 const SLAB = 26;                                          // how thick the board itself is drawn
-/* how far each tier floats above the last, a tile's thickness, and its size against its square. A tier-1 tile is
-   centred on its square, thickness and all, and INSET + (THICK / 2) / (TH / 2) stays under 1, so it sits wholly inside
-   its square's borders */
-const RISE = 32, THICK = 10, INSET = 0.84;
+/* a square's width and height on the drawing; how far each tier floats above the last; a tile's thickness; and its
+   size against its square. A tier-1 tile is centred on its square, thickness and all, and INSET + (THICK / 2) / (TH / 2)
+   stays under 1, so it sits wholly inside its square's borders. All four follow the board's square count, so the
+   smaller squares of the 5 x 5 board get thinner tiles and shorter steps. */
+let TW = BOARD / 3, TH = TW / 2, RISE = 32, THICK = 10;
+const INSET = 0.84;
+function setGrid(size) {
+  TW = BOARD / size; TH = TW / 2;
+  RISE = size > 3 ? 20 : 32;
+  THICK = size > 3 ? 6 : 10;
+}
 const px = (x, y) => (x - y) * TW / 2;
 const py = (x, y) => (x + y) * TH / 2;
 const diamond = (cx, cy) => [cx, cy - TH / 2, cx + TW / 2, cy, cx, cy + TH / 2, cx - TW / 2, cy].map((v) => v.toFixed(1)).join(' ');
@@ -661,7 +1005,9 @@ function slotMarkup(pos) {
   return '<polygon class="slot" points="' + pointList([t.top, t.right, t.bottom, t.left].map(base)) + '"/>';
 }
 function drawBoard() {
-  const p = game.puzzle, size = p.size, cy0 = (size - 1) * TH / 2;
+  const p = game.puzzle, size = p.size;
+  setGrid(size);
+  const cy0 = (size - 1) * TH / 2;
   /* a square window just big enough for the board's far corner plus the compass letter, at any angle */
   const half = compassReach(size) + 40;                      // room for the furthest compass letter, at any angle
   const corner = (gx, gy) => [px(gx, gy), py(gx, gy)], down = (q) => [q[0], q[1] + SLAB];
@@ -675,7 +1021,7 @@ function drawBoard() {
   const reviewing = game.phase === 'review';
   const shown = reviewing && game.reveal ? p.solution : game.placed;
   const flagged = new Set();
-  if (reviewing && !game.reveal) p.premises.forEach((s, i) => { if (!game.marks[i]) { flagged.add(s.subject); flagged.add(s.anchor); } });
+  if (reviewing && !game.reveal) p.premises.forEach((s, i) => { if (!game.marks[i]) { flagged.add(s.subject); flagged.add(s.anchor); if (s.other) flagged.add(s.other); } });
   /* tiles are grouped by square; squares further back are drawn first, and on one square lower tiers first */
   const squares = {};
   for (const [name, pos] of Object.entries(shown)) {
@@ -735,14 +1081,23 @@ function drawGhost(x, y) {
 
 /* ---------- panels ---------- */
 function statementMarkup(s) {
+  if (s.kind === 'near') {
+    /* Closer / Farther is underlined: pointing at it or tapping it says exactly what is compared */
+    const w = nearWords(s);
+    return term(s.subject) + ' <span class="rel">' + w[0] + '<span class="hint" tabindex="0" role="button" aria-describedby="tip">' + w[1] + '</span>' + w[2] + '</span> ' +
+      term(s.anchor) + ' <span class="rel">than</span> ' + term(s.other) + ' <span class="rel">is</span>';
+  }
   return term(s.subject) + ' <span class="rel">' + dirWords(s.dir, s.direct) + '</span> ' + term(s.anchor);
 }
 function drawBrief() {
   const p = game.puzzle, reviewing = game.phase === 'review';
+  $('lines').className = 'lines n' + p.premises.length;
+  hideTip();
   $('lines').innerHTML = p.premises.map((s, i) => {
-    const cls = reviewing ? (game.marks[i] ? 'ok' : 'off') : '';
+    const cls = (reviewing ? (game.marks[i] ? 'ok' : 'off') : '') + (s.kind === 'near' ? ' near' : '');
     return '<li class="' + cls + '"><span>' + statementMarkup(s) + '</span><span class="mark"' + (reviewing ? ' role="img" aria-label="' + (game.marks[i] ? 'holds' : 'broken') + '">' + (game.marks[i] ? ICONS.check : ICONS.clear) : '>') + '</span></li>';
   }).join('');
+  markScroll();
   const v = $('verdict');
   v.className = 'verdict';
   v.textContent = '';
@@ -756,13 +1111,16 @@ function drawBrief() {
 function drawTray() {
   const p = game.puzzle, reviewing = game.phase === 'review';
   /* one button per term: its name in the middle chooses it, the two ends move it down or up a tier */
+  $('chips').className = 'chips n' + p.names.length;
   $('chips').innerHTML = p.names.map((w) => {
     const fixed = p.fixed.includes(w), q = game.placed[w], chosen = w === game.selected && !reviewing;
     const arrow = (dir, word, glyph) => '<button type="button" class="nudge" data-push="' + dir + '" data-for="' + esc(w) + '"' + (!reviewing && !fixed && nextTier(w, dir) >= 0 ? '' : ' disabled') +
       ' aria-label="' + word + ' ' + esc(w) + ' one tier" title="' + word + ' one tier">' + glyph + '</button>';
-    return '<div class="term ' + hueOf(w) + (q ? ' down' : '') + (chosen ? ' sel' : '') + '">' + arrow(-1, 'Lower', '▼') +
-      '<button type="button" class="pick" data-term="' + esc(w) + '"' + (fixed || reviewing ? ' disabled' : '') + ' aria-pressed="' + chosen + '">' +
-      '<span class="who">' + esc(w) + '</span>' + (q ? '<span class="tier"><span class="tw">tier </span>' + (q[2] + 1) + '</span>' : '') + '</button>' + arrow(1, 'Raise', '▲') + '</div>';
+    const locked = isLocked(w);
+    return '<div class="term ' + hueOf(w) + (q ? ' down' : '') + (chosen ? ' sel' : '') + (locked ? ' locked' : '') + '">' + arrow(-1, 'Lower', '▼') +
+      '<button type="button" class="pick" data-term="' + esc(w) + '"' + (fixed || reviewing ? ' disabled' : '') + ' aria-pressed="' + chosen + '"' +
+      (locked ? ' aria-label="' + esc(w) + ', locked to its square: only its tier can change" title="Locked to its square: only its tier can change"' : '') + '>' +
+      (locked ? ICONS.lock : '') + '<span class="who">' + esc(w) + '</span>' + (q ? '<span class="tier"><span class="tw">tier </span>' + (q[2] + 1) + '</span>' : '') + '</button>' + arrow(1, 'Raise', '▲') + '</div>';
   }).join('');
   const all = p.names.every((w) => game.placed[w]);
   const go = $('act-go');
@@ -780,6 +1138,7 @@ function drawTray() {
 const ICONS = {
   check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>',
   clear: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 5.5l13 13M18.5 5.5l-13 13"/></svg>',
+  lock: '<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="bow" d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11"/><rect class="body" x="5" y="11" width="14" height="10" rx="1.5"/></svg>',
   next: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
   layout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
   mine: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 20L20 4"/></svg>'
@@ -788,11 +1147,56 @@ function drawTally() {
   $('pct').textContent = stats.total ? Math.round(100 * stats.right / stats.total) + '%' : '–';
   $('tally').innerHTML = stats.total ? stats.right + ' / ' + stats.total + '<span class="tw"> correct' + (stats.streak > 1 ? ' · streak ' + stats.streak : '') + '</span>' : 'no answers yet';
 }
-function drawAll() { drawBoard(); drawBrief(); drawTray(); drawTally(); }
+/* On a phone the Complex statements are a list to scroll. The edges fade, and an arrow shows, wherever there is more. */
+function markScroll() {
+  const el = $('lines'), brief = el.parentNode, room = el.scrollHeight - el.clientHeight;
+  brief.classList.toggle('more-up', room > 2 && el.scrollTop > 2);
+  brief.classList.toggle('more-down', room > 2 && el.scrollTop < room - 2);
+}
+function scrollLines(to) {
+  const el = $('lines');
+  if (el.scrollTo && !calm.matches) el.scrollTo({ top: to, behavior: 'smooth' }); else el.scrollTop = to;
+  markScroll();
+}
+function drawLevels() {
+  const main = document.querySelector('main');                              // the layout makes room for a fourth term and statement
+  for (const l of GRADES) main.classList.toggle('lv' + l, l === game.puzzle.level);
+}
+/* the board goes last: it is fitted to the room the statements and terms leave it */
+function drawAll() { drawLevels(); drawBrief(); drawTray(); drawTally(); drawBoard(); }
+/* ---------- the popup for Closer / Farther ---------- */
+function showTip(el) {
+  const tip = $('tip');
+  tip.hidden = false;
+  tip.style.left = '0px'; tip.style.top = '0px';
+  const r = el.getBoundingClientRect(), t = tip.getBoundingClientRect(), pad = 8;
+  const left = Math.max(pad, Math.min(innerWidth - t.width - pad, r.left + r.width / 2 - t.width / 2));
+  const above = r.top - t.height - 10;
+  tip.style.left = left + 'px';
+  tip.style.top = (above >= pad ? above : Math.min(innerHeight - t.height - pad, r.bottom + 10)) + 'px';
+  tip.owner = el;
+}
+function hideTip() { const tip = $('tip'); if (tip) { tip.hidden = true; tip.owner = null; tip.pinned = false; } }
 
 /* ---------- play ---------- */
 function occupant(x, y, level) {
   return Object.keys(game.placed).find((w) => { const q = game.placed[w]; return q[0] === x && q[1] === y && q[2] === level; });
+}
+/* a locked term (REF, in Complex) starts on the board and stays on its square; only its tier can be changed */
+const isLocked = (w) => !!(game && game.puzzle.pin && game.puzzle.pin[w]);
+function seatLocked() {
+  const pin = game.puzzle.pin || {};
+  for (const w of Object.keys(pin)) {
+    let l = 0;
+    while (l < LEVELS - 1 && occupant(pin[w][0], pin[w][1], l)) l++;
+    game.placed[w] = [pin[w][0], pin[w][1], l];
+  }
+}
+/* tapping a square with a locked term chosen does nothing: its button gives a short shake to say so */
+function refuse(w) {
+  const el = [...document.querySelectorAll('#chips .term')].find((t) => t.querySelector('.pick').dataset.term === w);
+  if (!el) return;
+  el.classList.remove('nope'); void el.offsetWidth; el.classList.add('nope');
 }
 function firstLoose() {
   return game.puzzle.names.find((w) => !game.placed[w]) || null;
@@ -800,6 +1204,7 @@ function firstLoose() {
 /* The tier a term takes when put on a square: a term already on the board keeps its tier if that spot
    is free; otherwise it goes to the lowest free tier, so clicking an occupied square stacks on top. */
 function landing(w, x, y) {
+  if (isLocked(w)) return -1;                               // a locked term keeps its square
   const mine = game.placed[w];
   if (mine && mine[0] === x && mine[1] === y) return -1;
   const free = (l) => { const o = occupant(x, y, l); return !o || o === w; };
@@ -820,22 +1225,26 @@ function nextTier(w, dir) {
    tier does neither. The bearing itself stays put, so what you built still stands. */
 function reshuffleView() {
   const p = game.puzzle;
-  const others = (p.spare || []).filter((c) => c !== game.shown);
-  if (others.length) game.shown = pick(others);
-  const was = shownAngle();
-  game.angle = pick(ANGLES.filter((a) => a !== game.angle));
-  swingFrom(was);
+  if (prefs.dirShuffle) {                                    // direction shuffle: another unused compass direction
+    const others = (p.spare || []).filter((c) => c !== game.shown);
+    if (others.length) game.shown = pick(others);
+  }
+  if (prefs.gridShuffle) {                                   // grid shuffle: another of the eight angles
+    const was = shownAngle();
+    game.angle = pick(ANGLES.filter((a) => a !== game.angle));
+    swingFrom(was);
+  }
 }
 function selectTerm(w) {
-  if (game.phase !== 'build' || game.puzzle.fixed.includes(w)) return;
+  if (paused || game.phase !== 'build' || game.puzzle.fixed.includes(w)) return;
   game.selected = w;
   drawBoard(); drawTray();
 }
 function placeAt(x, y) {
-  if (game.phase !== 'build') return;
+  if (paused || game.phase !== 'build') return;
   const w = game.selected;
   const tier = w ? landing(w, x, y) : -1;
-  if (tier < 0) return;                                      // no term chosen, or nowhere for it to go on this square
+  if (tier < 0) { if (w && isLocked(w)) refuse(w); return; }   // no term chosen, a locked one, or nowhere for it to go on this square
   game.placed[w] = [x, y, tier];
   /* carry on with the next loose term, if any */
   const loose = firstLoose();
@@ -844,7 +1253,7 @@ function placeAt(x, y) {
   drawBoard(); drawTray();
 }
 function setTier(w, l) {
-  if (game.phase !== 'build' || !game.puzzle.threeD) return;
+  if (paused || game.phase !== 'build' || !game.puzzle.threeD) return;
   const q = w && game.placed[w];
   if (!q || game.puzzle.fixed.includes(w) || l < 0 || l >= LEVELS || q[2] === l) return;
   const other = occupant(q[0], q[1], l);                     // moving into a tier that is taken swaps the two tiles
@@ -860,24 +1269,27 @@ function push(w, dir) {
   if (l >= 0) setTier(w, l);
 }
 function liftSelected() {
+  if (paused) return;
   const w = game.selected;
+  if (w && isLocked(w)) { refuse(w); return; }
   if (w && game.placed[w] && game.phase === 'build' && !game.puzzle.fixed.includes(w)) { delete game.placed[w]; reshuffleView(); drawBoard(); drawTray(); }
 }
 function clearBoard() {
-  if (game.phase !== 'build') return;
+  if (paused || game.phase !== 'build') return;
   for (const w of Object.keys(game.placed)) if (!game.puzzle.fixed.includes(w)) delete game.placed[w];
+  seatLocked();                                              // a locked term goes back to where it started
   game.selected = firstLoose();
   reshuffleView();
   drawBoard(); drawTray();
 }
 function check() {
-  if (game.phase !== 'build' || !game.puzzle.names.every((w) => game.placed[w])) return;
+  if (paused || game.phase !== 'build' || !game.puzzle.names.every((w) => game.placed[w])) return;
   game.phase = 'review';
   game.marks = judge(game.puzzle, game.placed);
   const right = game.marks.every(Boolean);
+  if (session) session.log.push({ ms: Math.max(0, playedMs() - session.asked), right });   // how long this question took, pauses left out
   stats.total++;
   if (right) { stats.right++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); } else stats.streak = 0;
-  keep.write('iso-trainer.stats', stats);
   drawAll();
   const sheet = $('sheet');
   sheet.classList.remove('pass', 'fail');
@@ -886,18 +1298,42 @@ function check() {
   if (right) {
     const win = $('win');
     win.classList.remove('on'); void win.offsetWidth; win.classList.add('on');
-    nextHandle = setTimeout(newQuestion, 1100);               // a correct answer moves on by itself
+    nextHandle = setTimeout(advance, 1100);                   // a correct answer moves on by itself
+  } else if (session && session.timeUp) {
+    nextHandle = setTimeout(advance, 1100);                   // the time was already up: a moment to see the marks, then the result
+  } else {
+    /* where the statements scroll, the first broken one comes into view */
+    const first = document.querySelector('#lines li.off'), el = $('lines');
+    if (first && el.scrollHeight > el.clientHeight + 2) scrollLines(Math.max(0, first.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop));
   }
+}
+/* A Complex question takes a moment to make (each candidate is checked against every possible layout), so the next
+   one for each mode is made ahead of time, in a quiet moment, and kept ready. */
+const ready = {};
+let stocking = null;
+function stockUp() {
+  clearTimeout(stocking);
+  const quiet = window.requestIdleCallback || ((f) => setTimeout(f, 1));
+  stocking = setTimeout(() => quiet(() => { if (!ready[level]) ready[level] = makePuzzle(level); }), 900);   // after the board has finished swinging in
 }
 function newQuestion() {
   clearTimeout(nextHandle);
-  const puzzle = makePuzzle();
-  const was = game ? shownAngle() : null;                    // the very first board simply appears
-  game = { puzzle, placed: {}, selected: null, phase: 'build', marks: [], reveal: false, shown: puzzle.given, angle: pick(ANGLES) };
+  const puzzle = ready[level] || makePuzzle(level);
+  ready[level] = null;
+  stockUp();
+  /* the very first board simply appears, and so does a board of another size (after a change of level) */
+  const was = game && game.puzzle.size === puzzle.size ? shownAngle() : null;
+  if (was === null) { cancelAnimationFrame(swing.frame); cancelAnimationFrame(view.frame); swing.on = false; view.on = false; view.s = 0; }
+  /* with grid shuffle off the board always sits the same way up */
+  game = { puzzle, placed: {}, selected: null, phase: 'build', marks: [], reveal: false, shown: puzzle.given, angle: prefs.gridShuffle ? pick(ANGLES) : 0 };
+  if (session) session.asked = playedMs();                   // this question's own clock starts here
+  setGrid(puzzle.size);
+  seatLocked();
   if (was !== null) swingFrom(was);
   game.selected = firstLoose();
   $('sheet').classList.remove('pass', 'fail');
   $('win').classList.remove('on');
+  $('lines').scrollTop = 0;
   drawAll();
 }
 
@@ -925,11 +1361,14 @@ $('chips').addEventListener('click', (e) => {
   if (b) selectTerm(b.getAttribute('data-term'));
 });
 $('act-clear').addEventListener('click', clearBoard);
-$('act-go').addEventListener('click', () => { if (game.phase === 'review') newQuestion(); else check(); });
-$('act-answer').addEventListener('click', () => { game.reveal = !game.reveal; drawAll(); });
+$('act-go').addEventListener('click', () => { if (paused) return; if (game.phase === 'review') advance(); else check(); });
+$('act-answer').addEventListener('click', () => { if (paused) return; game.reveal = !game.reveal; drawAll(); });
 
 document.addEventListener('keydown', (e) => {
   if ((e.target.tagName || '').toLowerCase() === 'input') return;          // typing a minute value
+  if (screenNow() === 'setup') { if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); startSession(); } return; }
+  if (screenNow() === 'done') { if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); showScreen('setup'); } return; }
+  if (paused || !game) return;                                             // the board is hidden while the timer is paused
   if (e.key === 'Enter') { e.preventDefault(); $('act-go').click(); }
   else if (e.key === 'Backspace' || e.key === 'Delete') liftSelected();
   else if (!game.puzzle.threeD || !game.selected) return;
@@ -937,18 +1376,82 @@ document.addEventListener('keydown', (e) => {
   else if (+e.key >= 1 && +e.key <= LEVELS) setTier(game.selected, +e.key - 1);
 });
 
-$('reset-score').addEventListener('click', () => { stats = { right: 0, total: 0, streak: 0, best: 0 }; keep.write('iso-trainer.stats', stats); drawTally(); });
+$('reset-score').addEventListener('click', () => { stats = blankStats(); if (session) session.log = []; drawTally(); });
+$('lines').addEventListener('scroll', () => { markScroll(); hideTip(); }, { passive: true });
+window.addEventListener('resize', markScroll);
+$('more-up').addEventListener('click', () => { const el = $('lines'); scrollLines(Math.max(0, el.scrollTop - el.clientHeight * 0.66)); });
+$('more-down').addEventListener('click', () => { const el = $('lines'); scrollLines(Math.min(el.scrollHeight - el.clientHeight, el.scrollTop + el.clientHeight * 0.66)); });
+/* the underlined Closer / Farther: its popup shows while it is pointed at or focused, and a tap toggles it */
+{
+  const lines = $('lines'), hintOf = (e) => e.target.closest && e.target.closest('.hint');
+  lines.addEventListener('mouseover', (e) => { const h = hintOf(e); if (h) showTip(h); });
+  lines.addEventListener('mouseout', (e) => { if (hintOf(e) && !$('tip').pinned) hideTip(); });
+  lines.addEventListener('focusin', (e) => { const h = hintOf(e); if (h) showTip(h); });
+  lines.addEventListener('focusout', (e) => { if (hintOf(e)) { $('tip').pinned = false; hideTip(); } });
+  document.addEventListener('click', (e) => {
+    const h = hintOf(e), tip = $('tip');
+    if (h && !(tip.pinned && tip.owner === h)) { showTip(h); tip.pinned = true; }
+    else { tip.pinned = false; hideTip(); }
+  });
+  document.addEventListener('keydown', (e) => {
+    const h = hintOf(e);
+    if (e.key === 'Escape') { $('tip').pinned = false; hideTip(); }
+    else if (h && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); h.click(); }
+  }, true);
+  window.addEventListener('resize', () => { $('tip').pinned = false; hideTip(); });
+}
 
-/* ---------- countdown timer: a plain stopwatch running backwards, it never touches the questions ---------- */
-const timer = { left: 0, endAt: 0, running: false, done: false, frame: 0 };
+/* ---------- the session: settings, then play against the clock, then the result ---------- */
+const screenNow = () => document.body.dataset.screen;
+function showScreen(name) {
+  document.body.dataset.screen = name;
+  hideTip();
+  if (name === 'setup') drawPrefs();
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();   // Enter then starts the session, or moves on
+}
+/* the settings screen */
+function drawPrefs() {
+  const mark = (id, value) => document.querySelectorAll('#' + id + ' button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === String(value))));
+  mark('opt-mode', prefs.mode);
+  mark('opt-grid', prefs.gridShuffle ? 1 : 0);
+  mark('opt-dirs', prefs.dirShuffle ? 1 : 0);
+  if (document.activeElement !== $('opt-minutes')) $('opt-minutes').value = prefs.minutes;
+  fitMinutes();
+}
+/* the big minutes box is as wide as what is in it */
+function fitMinutes() { const box = $('opt-minutes'); box.style.width = (Math.max(2, String(box.value).length) + 0.25) + 'ch'; }
+function savePrefs() { keep.write('iso-trainer.session', prefs); }
+function minutesTyped() {
+  const v = parseFloat($('opt-minutes').value);
+  return isFinite(v) && v > 0 ? Math.min(v, 99) : 0;
+}
+{
+  const choose = (id, set) => $(id).addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; set(b.dataset.value); savePrefs(); drawPrefs(); });
+  choose('opt-mode', (v) => { prefs.mode = +v === COMPLEX ? COMPLEX : SIMPLE; });
+  choose('opt-grid', (v) => { prefs.gridShuffle = v === '1'; });
+  choose('opt-dirs', (v) => { prefs.dirShuffle = v === '1'; });
+  const box = $('opt-minutes');
+  box.addEventListener('input', () => { fitMinutes(); if (minutesTyped() > 0) { prefs.minutes = minutesTyped(); savePrefs(); } });
+  /* tapping or clicking the minutes empties the box, ready for a new value; leaving it empty puts the old one back */
+  box.addEventListener('focus', () => { box.value = ''; fitMinutes(); });
+  box.addEventListener('blur', () => { box.value = prefs.minutes; fitMinutes(); });
+  box.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); box.blur(); startSession(); } });
+  $('session-start').addEventListener('click', startSession);
+  $('session-next').addEventListener('click', () => showScreen('setup'));
+}
+
+/* The time actually played so far this session, in ms: it stands still while the timer is paused, and it carries on
+   after the countdown reaches zero, until the question in hand has been checked. */
+function playedMs() { return session ? session.spent + (session.since === null ? 0 : performance.now() - session.since) : 0; }
+/* m:ss for the result screen */
+function clockText(ms) { const t = Math.max(0, Math.round(ms / 1000)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); }
+
+/* the countdown: read off the clock each frame, so it cannot drift */
+const timer = { left: 0, endAt: 0, running: false, frame: 0 };
 const TIMER_ICONS = {
   play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg>',
   pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="5" width="4.5" height="14"/><rect x="14" y="5" width="4.5" height="14"/></svg>'
 };
-function minutesTyped() {
-  const v = parseFloat($('timer-min').value);
-  return isFinite(v) && v > 0 ? Math.min(v, 999) : 0;
-}
 function timeText(ms) {
   const t = Math.max(0, Math.ceil(ms / 1000 - 1e-6));          // whole seconds, rounded up, so it reads 00:00 only at the end
   const two = (n) => String(n).padStart(2, '0');
@@ -956,65 +1459,103 @@ function timeText(ms) {
 }
 function drawTimer() {
   $('time').textContent = timeText(timer.left);
-  $('time').classList.toggle('done', timer.done);
-  /* at rest the control shows the minutes and Start; once started it shows the time left, Pause (Resume while
-     paused) and Stop; when the time has run out only Stop is left, to put it back to the start */
-  const idle = !timer.running && !timer.done && !timer.touched;
-  document.querySelector('.clock').classList.toggle('idle', idle);
-  $('timer-go').hidden = !idle;
-  $('timer-pause').hidden = idle || timer.done;
   /* drawn as icons, not glyphs, so a phone never swaps them for emoji */
-  $('timer-pause').innerHTML = timer.running ? TIMER_ICONS.pause : TIMER_ICONS.play;
-  $('timer-pause').setAttribute('aria-label', timer.running ? 'Pause' : 'Resume');
-  $('timer-stop').hidden = idle;
+  const over = !!(session && session.timeUp);
+  $('timer-pause').innerHTML = paused ? TIMER_ICONS.play : TIMER_ICONS.pause;
+  $('timer-pause').setAttribute('aria-label', paused ? 'Start timer' : 'Pause');
+  $('timer-pause').title = over ? 'Time is up: finish this question' : paused ? 'Start timer' : 'Pause';
+  $('timer-pause').disabled = over;                           // nothing left to pause once the time is up
+  document.querySelector('.clock').classList.toggle('over', over);
+  /* paused: the board is hidden, with a line in its place saying how to carry on */
+  $('sheet').classList.toggle('held', paused);
+  $('hold').hidden = !paused;
+  document.querySelector('main').classList.toggle('paused', paused);
 }
 function tickTimer() {
-  timer.left = timer.endAt - performance.now();               // read off the clock each frame, so it cannot drift
-  if (timer.left <= 0) { timer.left = 0; timer.running = false; timer.done = true; drawTimer(); return; }
+  timer.left = timer.endAt - performance.now();
+  if (timer.left <= 0) { timer.left = 0; timer.running = false; timeIsUp(); return; }
   drawTimer();
   timer.frame = requestAnimationFrame(tickTimer);
 }
-function startTimer() {
-  if (timer.running) return;
-  if (timer.left <= 0) timer.left = minutesTyped() * 60000;   // ran out earlier: go again from the typed value
-  if (timer.left <= 0) return;
+/* The countdown has reached zero. A question being worked on is not cut short: the session ends once it has been
+   checked. If an answer is already in (it is being looked over, or the next question is on its way), the session
+   ends when that would have moved on. */
+function timeIsUp() {
+  session.timeUp = true;
+  drawTimer();
+}
+/* on from a checked answer: the next question, or the result if the time has run out */
+function advance() {
+  if (session && session.timeUp) endSession('time'); else newQuestion();
+}
+function runTimer() {
+  if (timer.running || timer.left <= 0) return;
   timer.running = true;
-  timer.touched = true;
-  timer.done = false;
+  paused = false;
+  session.since = performance.now();
   timer.endAt = performance.now() + timer.left;
   tickTimer();
+  applyTurn();                                                // the board is back: fit it to its area again
 }
-function stopTimer() {                                        // a pause: Start carries on from here
+function pauseTimer() {
   if (!timer.running) return;
   cancelAnimationFrame(timer.frame);
   timer.left = Math.max(0, timer.endAt - performance.now());
   timer.running = false;
+  paused = true;
+  session.spent += performance.now() - session.since;
+  session.since = null;
+  hideTip();
   drawTimer();
 }
-function resetTimer() {
+$('timer-pause').addEventListener('click', () => { if (session.timeUp) return; if (paused) runTimer(); else pauseTimer(); });
+$('abort').addEventListener('click', () => endSession('abort'));
+
+function startSession() {
+  const minutes = minutesTyped() || prefs.minutes || 25;
+  prefs.minutes = minutes;
+  savePrefs();
+  level = prefs.mode;
+  stats = blankStats();
+  session = { mode: level, length: minutes * 60000, timeUp: false, why: null, log: [], spent: 0, since: null, asked: 0 };
+  paused = false;
+  game = null;
+  clearTimeout(nextHandle);
   cancelAnimationFrame(timer.frame);
   timer.running = false;
-  timer.done = false;
-  timer.touched = false;
-  timer.left = minutesTyped() * 60000;
-  drawTimer();
+  timer.left = session.length;
+  showScreen('play');                                         // on screen first, so the board can be fitted to its area
+  newQuestion();
+  runTimer();
 }
-$('timer-go').addEventListener('click', startTimer);
-$('timer-pause').addEventListener('click', () => { if (timer.running) stopTimer(); else startTimer(); });
-$('timer-stop').addEventListener('click', resetTimer);
-$('timer-min').addEventListener('input', () => {
-  if (minutesTyped() > 0) keep.write('iso-trainer.timer', { minutes: $('timer-min').value });
-  if (!timer.running && !timer.touched) resetTimer();         // a new value shows at once while the timer is at rest
-});
-/* tapping or clicking the minutes empties the box, ready for a new value; leaving it empty puts the old one back */
-let minutesBefore = '';
-$('timer-min').addEventListener('focus', (e) => { minutesBefore = e.target.value; e.target.value = ''; });
-$('timer-min').addEventListener('blur', (e) => {
-  if (minutesTyped() > 0) return;
-  e.target.value = minutesBefore || '25';
-  if (!timer.running && !timer.touched) resetTimer();
-});
-$('timer-min').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); startTimer(); } });
+/* the session is over: the time ran out and the last question was checked ('time'), or Abort was pressed
+   ('abort'). Either way the same result screen: the accuracy, the time, and every question with its own time. */
+function endSession(why) {
+  if (!session || screenNow() !== 'play') return;
+  cancelAnimationFrame(timer.frame);
+  clearTimeout(nextHandle);
+  clearTimeout(stocking);
+  const spent = playedMs();
+  if (timer.running) timer.left = Math.max(0, timer.endAt - performance.now());
+  timer.running = false;
+  paused = false;
+  session.spent = spent; session.since = null;
+  session.why = session.timeUp ? 'time' : why;
+  const log = session.log, right = log.filter((q) => q.right).length;
+  $('done-title').textContent = session.why === 'time' ? 'Session complete' : 'Session aborted';
+  $('done-mode').textContent = (session.mode === COMPLEX ? 'Complex' : 'Simple') + ' · grid shuffle ' + (prefs.gridShuffle ? 'on' : 'off') + ' · direction shuffle ' + (prefs.dirShuffle ? 'on' : 'off');
+  $('done-pct').textContent = log.length ? Math.round(100 * right / log.length) + '%' : '–';
+  $('done-right').textContent = right;
+  $('done-total').textContent = 'of ' + log.length;
+  $('done-time').textContent = clockText(spent);
+  $('done-avg').textContent = log.length ? clockText(log.reduce((sum, q) => sum + q.ms, 0) / log.length) : '–';
+  $('done-log').innerHTML = log.length ? log.map((q, i) => '<li class="' + (q.right ? 'ok' : 'off') + '"><span class="n">' + (i + 1) + '</span>' +
+    '<span role="img" aria-label="' + (q.right ? 'right' : 'wrong') + '">' + (q.right ? ICONS.check : ICONS.clear) + '</span><span class="t">' + clockText(q.ms) + '</span></li>').join('')
+    : '<li class="none">No questions answered.</li>';
+  $('done-log').scrollTop = 0;
+  drawTimer();
+  showScreen('done');
+}
 
 /* the phone top row puts the timer just past the name, so it needs the name's rendered width */
 {
@@ -1025,24 +1566,20 @@ $('timer-min').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.p
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(setNameW);
 }
 
-/* ---------- start (keeps a question in progress across a page update) ---------- */
-function start(saved) {
-  const kept = keep.read('iso-trainer.timer');
-  if (kept && parseFloat(kept.minutes) > 0) $('timer-min').value = kept.minutes;
-  resetTimer();
-  stats = Object.assign(stats, keep.read('iso-trainer.stats') || {}, saved && saved.stats || {});
-  const old = saved && saved.game;
-  /* a question left over from an earlier version of the page may not fit this one: start a fresh one instead */
-  if (old && old.puzzle && Array.isArray(old.puzzle.spare) && typeof old.angle === 'number' && old.puzzle.v === 7) {
-    game = old;
-    drawAll();
-  } else {
-    newQuestion();
-  }
+/* ---------- start: every visit opens on the session settings ---------- */
+function start() {
+  const kept = keep.read('iso-trainer.session') || {};
+  /* settings from before there was a settings screen: the mode and the minutes last used */
+  const oldMode = +keep.read('iso-trainer.level'), oldTimer = keep.read('iso-trainer.timer');
+  if (GRADES.includes(+kept.mode)) prefs.mode = +kept.mode; else if (GRADES.includes(oldMode)) prefs.mode = oldMode;
+  const mins = parseFloat(kept.minutes != null ? kept.minutes : oldTimer && oldTimer.minutes);
+  if (isFinite(mins) && mins > 0) prefs.minutes = Math.min(mins, 99);
+  if (typeof kept.gridShuffle === 'boolean') prefs.gridShuffle = kept.gridShuffle;
+  if (typeof kept.dirShuffle === 'boolean') prefs.dirShuffle = kept.dirShuffle;
+  showScreen('setup');
 }
 const hot = window.claude && window.claude.hot;
-if (hot && hot.snapshot) hot.snapshot(() => ({ stats, game }));
-if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
+if (hot && hot.ready) hot.ready(() => start()); else start();
 })();
 </script>
 </body>
