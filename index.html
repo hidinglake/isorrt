@@ -88,7 +88,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
 .act:disabled { opacity: .35; cursor: default; }
 
 /* ---- board ---- */
-.desk { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.desk { position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .sheet { flex: 1; min-height: 0; display: grid; place-items: center; padding: 0; overflow: hidden; }
 .sheet svg { display: block; width: 100%; height: 100%; touch-action: manipulation; user-select: none; }
 .cell { fill: var(--paper-raised); stroke: var(--ink); stroke-width: 3.5; stroke-linejoin: round; cursor: pointer; }
@@ -121,6 +121,21 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
 .slot { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; stroke-dasharray: 7 6; }
 .sheet.pass svg { animation: pass .7s ease; }
 .sheet.fail svg { animation: fail .5s ease; }
+/* the correct-answer badge: pops in, draws its tick, holds, then fades before the next question swings in */
+.win { position: absolute; inset: 0; z-index: 2; display: none; place-items: center; pointer-events: none; }
+.win.on { display: grid; }
+.win svg { width: clamp(130px, 40vmin, 380px); height: auto; overflow: visible; }
+.win circle { fill: var(--right); }
+.win path { fill: none; stroke: #ffffff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 70; }
+.win.on svg { animation: win-pop 1.05s cubic-bezier(.2, .9, .3, 1.2) forwards; }
+.win.on path { animation: win-tick .32s .16s ease-out backwards; }
+@keyframes win-pop {
+  0% { opacity: 0; transform: scale(.35); }
+  24% { opacity: 1; transform: scale(1.06); }
+  34%, 76% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.12); }
+}
+@keyframes win-tick { from { stroke-dashoffset: 70; } to { stroke-dashoffset: 0; } }
 @keyframes pass { 30% { filter: drop-shadow(0 0 12px rgba(255, 255, 255, .55)); } }
 @keyframes fail { 20% { transform: translateX(-5px); } 45% { transform: translateX(5px); } 70% { transform: translateX(-3px); } }
 
@@ -315,6 +330,8 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
     </div>
     <section class="desk" aria-label="Board">
       <div class="sheet" id="sheet"></div>
+      <!-- a correct answer: a big green circle with a white tick pops up in front of the board -->
+      <div class="win" id="win" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="47"/><path d="M28 52l15 15 30-33"/></svg></div>
     </section>
   </section>
 
@@ -866,7 +883,11 @@ function check() {
   sheet.classList.remove('pass', 'fail');
   void sheet.offsetWidth;
   sheet.classList.add(right ? 'pass' : 'fail');
-  if (right) nextHandle = setTimeout(newQuestion, 1100);     // a correct answer moves on by itself
+  if (right) {
+    const win = $('win');
+    win.classList.remove('on'); void win.offsetWidth; win.classList.add('on');
+    nextHandle = setTimeout(newQuestion, 1100);               // a correct answer moves on by itself
+  }
 }
 function newQuestion() {
   clearTimeout(nextHandle);
@@ -876,6 +897,7 @@ function newQuestion() {
   if (was !== null) swingFrom(was);
   game.selected = firstLoose();
   $('sheet').classList.remove('pass', 'fail');
+  $('win').classList.remove('on');
   drawAll();
 }
 
