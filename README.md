@@ -6,7 +6,7 @@ A relational reasoning trainer where you build the answer instead of judging it.
 
 You get three statements about three terms, such as *"MEH is Directly Above SUN"*, *"MEH is East of LUL"* and *"LUL is Above and West of SUN"*. You don't answer true or false. You place three coloured tiles on a small isometric board so that every statement holds. The board keeps turning while you work, and one compass label is your only fixed reference.
 
-There are two modes. **Simple** is the question above. **Complex** moves to a larger board with a fourth term, and adds a statement that compares distances (*"SUN is Closer to MEH than LUL is"*).
+There are three modes, shown as one, two and three stars. ★ is the question above. ★★ moves to a larger board and adds a statement that compares distances (*"SUN is Closer to MEH than LUL is"*). ★★★ adds a fourth term and a fifth statement.
 
 ---
 
@@ -40,7 +40,7 @@ The label always shows a direction that none of the statements use. You can neve
 
 ### 5. Few items, more dimensions
 
-Everyday relational problems rarely involve ten items in a chain. They usually involve a handful of things related in several ways at once: position, height, order. isoRRT keeps it to three or four terms and three to five statements, but combines a height dimension with a compass dimension. Complex mode adds distance: a single statement that compares three terms at once. The challenge is integrating relations across dimensions, not memorising a long list.
+Everyday relational problems rarely involve ten items in a chain. They usually involve a handful of things related in several ways at once: position, height, order. isoRRT keeps it to three or four terms and three to five statements, but combines a height dimension with a compass dimension. The higher modes add distance: a single statement that compares three terms at once. The challenge is integrating relations across dimensions, not memorising a long list.
 
 ### 6. Nothing to lean on but the relations
 
@@ -58,7 +58,7 @@ Every visit opens on the session settings:
 
 | Setting | What it does |
 |---|---|
-| Mode | Simple or Complex (see below) |
+| Mode | ★, ★★ or ★★★ (see below) |
 | Session duration | How long the session runs, in minutes. Tap the number to type a new one. |
 | Grid shuffle | On: the board swings to a new angle each time you place, move, lift or clear a term. Off: the board always sits the same way up. |
 | Direction shuffle | On: the compass label changes to another unused direction each time you place, move, lift or clear a term. Off: the label stays put for the whole question. |
@@ -70,20 +70,33 @@ During play the timer sits at the top left (beside the name on a phone), with **
 - **❚❚** pauses the clock. While it is paused the board is hidden and "Start timer to continue" stands in its place; **▶** brings it back.
 - **Abort** ends the session early.
 - When the clock runs out, the question you are on is not cut short: the clock reads 00:00 in red, and the session ends once you check that answer.
-- The result screen (also shown after Abort) gives the session's accuracy, how many you got right, the time spent, the average time per question, and a list of every question with ✓ or ✕ and the time it took. Pauses are left out of the times. **Next** returns to the settings.
+- The result screen (also shown after Abort) gives the session's accuracy, how many you got right, the time spent, the average time per question, and a list of every question with ✓ or ✕ and the time it took. Pauses are left out of the times. **Copy results** puts a short text summary on the clipboard, ready to paste; **Next** returns to the settings.
+
+  ```
+  25min isoRRT Session
+  Mode: ★★★
+  Accuracy: 79%
+  Questions: 18 (Mistakes: 4)
+  Average time: 0:42 per question
+  Grid shuffle: Enabled
+  Direction shuffle: Enabled
+  ```
 
 ## Modes
 
 | Mode | Board | Terms | Statements |
 |---|---|---|---|
-| Simple | 3 × 3 | 3 | height, compass, and one that combines the two |
-| Complex | 5 × 5 | 4 (three drawn names plus **REF**, in white) | five: height, compass, Closer / Farther third, a fourth that combines height with compass, and a fifth compass direction |
+| ★ | 3 × 3 | 3 | three: height, compass, and one that combines the two |
+| ★★ | 5 × 5 | 3 | four: height, compass, Closer / Farther third, and a fourth that combines height with compass |
+| ★★★ | 5 × 5 | 4 (three drawn names plus **REF**, in white) | five: height, compass, Closer / Farther third, a fourth that combines height with compass, and a fifth compass direction |
 
-In Complex, three of the terms are tied together in a loop by three compass statements, so they have to be worked out together and not one after another. Every term has a statement about its tier. Every statement matters: questions are only used where Closer / Farther rules out at least half of the layouts that satisfy the rest, and each other statement at least a quarter.
+★★ is ★ with one new idea: every pair of terms is still related, and a distance comparison is added on a board with room for it. It never says "Directly".
+
+In ★★★, three of the terms are tied together in a loop by three compass statements, so they have to be worked out together and not one after another. Every term has a statement about its tier. In ★★ and ★★★ every statement matters: questions are only used where Closer / Farther rules out at least half of the layouts that satisfy the rest, and each other statement at least a quarter.
 
 The fourth term is always called **REF** and is always white. It starts on the board, on a square it never leaves, and its button (the last one in the list, or the bottom right on a phone) carries a small padlock. You can still choose it and move it up or down a tier with ▲ ▼, but tapping a square won't move it and Clear puts it back on tier 1. It is your reference point: the other three terms are placed around it.
 
-On a phone, the five Complex statements are a list you scroll: three are in view, with arrows to the rest. After a wrong answer the list moves to the first broken statement.
+On a phone, the statements in ★★ and ★★★ are a list you scroll: three are in view, with arrows to the rest. After a wrong answer the list moves to the first broken statement.
 
 Accuracy is counted per session.
 
@@ -106,18 +119,18 @@ A correct answer moves on to the next question by itself. A wrong one marks each
 | North, East, South or West of | any | straight along that compass line |
 | North-East, South-East, South-West or North-West of | any | both directions, by any amounts |
 | Above and North-East of (and the like) | higher / lower | as for the compass direction |
-| A is Closer to B than C is (Complex) | any | A's square is nearer to B's than C's square is |
-| A is Farther from B than C is (Complex) | any | A's square is farther from B's than C's square is |
+| A is Closer to B than C is (★★ and ★★★) | any | A's square is nearer to B's than C's square is |
+| A is Farther from B than C is (★★ and ★★★) | any | A's square is farther from B's than C's square is |
 
 For the direction words, only direction counts, never distance.
 
 **Closer** and **Farther** compare straight-line distance across the board. Height doesn't count: a tile two tiers up on the same square is as close as it can be. A tie is neither closer nor farther. The word is underlined in the statement; point at it or tap it for a reminder. Questions are only built from layouts where the comparison is clear however you count the distance.
 
-In Simple, each pair of terms is related exactly once.
+In ★, each pair of terms is related exactly once.
 
 ## The board
 
-- **3 × 3 squares (5 × 5 in Complex), 3 tiers.** Both have a centre square, so every compass line runs through the middle of a square. A tile on tier 1 lies on its square. Higher tiers float a step above, so a stack reads as separate plates. Empty tiers under a raised tile show as dashed outlines.
+- **3 × 3 squares (5 × 5 in ★★ and ★★★), 3 tiers.** Both have a centre square, so every compass line runs through the middle of a square. A tile on tier 1 lies on its square. Higher tiers float a step above, so a stack reads as separate plates. Empty tiers under a raised tile show as dashed outlines.
 - **One compass label.** A single direction (any of the eight) is shown beside the board, with a thin line pointing to its spot on the board's edge.
 - **The view changes as you build.** With grid shuffle and direction shuffle on, placing, moving, lifting or clearing a tile swings the board to a new angle and changes the label. Moving a tile up or down a tier does not. Either shuffle can be turned off in the session settings.
 - **Height turns with the board.** Tiers rise along the board's own "up", which is not always up the screen.
@@ -151,7 +164,7 @@ Questions are generated at random, so there is no fixed set to run out of or mem
 - which of eight ways North points on the board,
 - a hidden layout of the terms that the statements describe,
 - whether the height statement says "Directly",
-- in Complex, which three terms the Closer / Farther statement compares, and whether it says Closer or Farther,
+- in ★★ and ★★★, which three terms the Closer / Farther statement compares, and whether it says Closer or Farther,
 - whether the compass statement is straight (North, East, South, West) or diagonal,
 - which way round each statement is told ("A is Above B" or "B is Below A"),
 - the names, from a list of letter-only three-letter names, and which colour each gets.

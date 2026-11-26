@@ -36,6 +36,10 @@ body[data-screen="setup"] #screen-setup, body[data-screen="done"] #screen-done {
 .seg button { flex: 1 1 0; font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: .16em; text-transform: uppercase; line-height: 1; }
 .seg button + button { border-left: 1.5px solid var(--ink); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.stars { display: inline-flex; align-items: center; gap: 3px; vertical-align: middle; }
+.star { width: 20px; height: 20px; fill: currentColor; }
+.seg .stars { pointer-events: none; }
+.hint-line .star { width: 14px; height: 14px; }
 .seg button:hover:not([aria-pressed="true"]) { background: color-mix(in srgb, var(--ink) 10%, transparent); }
 .hint-line { margin-top: 8px; font-size: 13.5px; line-height: 1.4; color: var(--ink-soft); }
 .big { display: flex; align-items: baseline; gap: 8px; line-height: .9; }
@@ -47,6 +51,12 @@ body[data-screen="setup"] #screen-setup, body[data-screen="done"] #screen-done {
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .start { flex: none; height: clamp(46px, 6.4vh, 54px); background: var(--right); color: #000; font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: .22em; text-transform: uppercase; line-height: 1; }
 .start:hover { background: color-mix(in srgb, var(--right) 82%, #fff); }
+.ends { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.copy { height: clamp(46px, 6.4vh, 54px); border: 1.5px solid var(--ink); font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: .16em; text-transform: uppercase; line-height: 1; white-space: nowrap; }
+.copy:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.copy.done { background: var(--ink); color: var(--paper); }
+/* only if the clipboard cannot be reached: the same text, selected, to copy by hand */
+.report { flex: none; width: 100%; padding: 10px 12px; background: var(--paper-raised); color: var(--ink); border: 1.5px solid var(--grid); font-family: var(--font-mono); font-size: 16px; line-height: 1.4; resize: none; }
 /* the result screen: smaller figures than the settings', and the list of questions scrolls inside the screen */
 #screen-done .panel { max-height: 100%; gap: clamp(10px, 2.2vh, 24px); }
 #screen-done .big .num { font-size: clamp(38px, 6.6vh, 62px); }
@@ -108,7 +118,9 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(-
 .hint { text-decoration: underline; text-decoration-thickness: .08em; text-underline-offset: .16em; cursor: help; }
 .hint:focus-visible { outline-offset: 3px; }
 .tip { position: fixed; z-index: 10; left: 0; top: 0; max-width: min(320px, calc(100vw - 16px)); padding: 10px 13px; background: var(--ink); color: var(--paper); font-family: var(--font-body); font-size: 15px; font-weight: 500; line-height: 1.35; pointer-events: none; box-shadow: 0 6px 24px rgba(0, 0, 0, .6); }
-/* five statements (Complex) share the row; the long Closer / Farther one sets the size */
+/* four statements (two stars) or five (three stars) share the row; the long Closer / Farther one sets the size */
+.lines.n4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lines.n4 li { font-size: clamp(18px, 2.6vh, 38px); padding-left: clamp(12px, 1vw, 22px); padding-right: clamp(12px, 1vw, 22px); }
 .lines.n5 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .lines.n5 li { font-size: clamp(15px, 2.2vh, 32px); padding-left: clamp(10px, .8vw, 20px); padding-right: clamp(10px, .8vw, 20px); gap: 6px; }
 .verdict { flex: 1; min-width: 0; align-self: center; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 3vh, 40px); letter-spacing: .08em; text-transform: uppercase; line-height: 1.1; }
@@ -300,6 +312,7 @@ main.paused .chips, main.paused .acts, main.paused #reset-score { pointer-events
 @media (max-height: 620px) and (min-width: 621px) {
   .term { min-height: 26px; }
   .lines.n5 { gap: 6px; }
+  .lines.n4 li { font-size: 13px; padding: 5px 8px; }
   .lines.n5 li { font-size: 12px; padding: 4px 6px; grid-template-columns: minmax(0, 1fr) 13px; gap: 4px; }
   main.lv3 .term .who { font-size: 16px; }
   main.lv3 .acts .act { aspect-ratio: auto; height: 32px; }
@@ -354,12 +367,12 @@ main.paused .chips, main.paused .acts, main.paused #reset-score { pointer-events
   .term .nudge { font-size: 12px; }
   /* Complex: the five statements are a list to scroll through, three in view at a time with the next one peeking in,
      each as large as in Simple; the four terms sit two by two */
-  main.lv3 { grid-template-rows: auto minmax(0, 1fr) clamp(190px, 34dvh, 310px); }
+  main.lv2, main.lv3 { grid-template-rows: auto minmax(0, 1fr) clamp(190px, 34dvh, 310px); }
   .brief { position: relative; container-type: size; }
-  .lines.n5 { display: flex; flex-direction: column; gap: 6px; height: 100%; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; touch-action: pan-y; }
-  .lines.n5::-webkit-scrollbar { display: none; }
+  .lines.n4, .lines.n5 { display: flex; flex-direction: column; gap: 6px; height: 100%; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; touch-action: pan-y; }
+  .lines.n4::-webkit-scrollbar, .lines.n5::-webkit-scrollbar { display: none; }
   .lines li.near .t { font-size: 1.3em; }   /* keeps the long Closer / Farther statement to three lines */
-  .lines.n5 li { flex: 0 0 auto; min-height: 52px; min-height: calc((100cqh - 18px) / 3.3); font-size: 12.5px; padding: 4px 8px; gap: 4px; grid-template-columns: minmax(0, 1fr) 15px; overflow: visible; scroll-snap-align: start; }
+  .lines.n4 li, .lines.n5 li { flex: 0 0 auto; min-height: 52px; min-height: calc((100cqh - 18px) / 3.3); font-size: 12.5px; padding: 4px 8px; gap: 4px; grid-template-columns: minmax(0, 1fr) 15px; overflow: visible; scroll-snap-align: start; }
   /* the list fades out at an edge that has more beyond it, and a small arrow there says which way */
   .brief::before, .brief::after { content: ""; position: absolute; left: 0; right: 0; height: 30px; z-index: 1; pointer-events: none; opacity: 0; transition: opacity .15s; }
   .brief::before { top: 0; background: linear-gradient(to bottom, var(--paper) 10%, transparent); }
@@ -387,7 +400,7 @@ main.paused .chips, main.paused .acts, main.paused #reset-score { pointer-events
   .pct { font-size: 22px; }
   .score .label { font-size: 8px; letter-spacing: .03em; }
   .meter { gap: 5px; }
-  .lines li, .lines.n5 li { font-size: 11px; padding: 3px 6px; }
+  .lines li, .lines.n4 li, .lines.n5 li { font-size: 11px; padding: 3px 6px; }
   .term .who { font-size: 15px; }
   .term .nudge { height: 30px; }
   .chips.n4 .term .nudge { height: 24px; }
@@ -407,8 +420,9 @@ main.paused .chips, main.paused .acts, main.paused #reset-score { pointer-events
     <div class="field">
       <span class="cap" id="cap-mode">Mode</span>
       <div class="seg" id="opt-mode" role="group" aria-labelledby="cap-mode">
-        <button type="button" data-value="1">Simple</button>
-        <button type="button" data-value="3">Complex</button>
+        <button type="button" data-value="1" aria-label="1 star" title="1 star"></button>
+        <button type="button" data-value="2" aria-label="2 stars" title="2 stars"></button>
+        <button type="button" data-value="3" aria-label="3 stars" title="3 stars"></button>
       </div>
     </div>
 
@@ -470,7 +484,12 @@ main.paused .chips, main.paused .acts, main.paused #reset-score { pointer-events
       <span class="cap" id="cap-log">Questions</span>
       <ol class="log" id="done-log" aria-labelledby="cap-log"></ol>
     </div>
-    <button class="start" id="session-next" type="button">Next</button>
+    <!-- Copy results puts a short text summary of the session on the clipboard; Next goes back to the settings -->
+    <div class="ends">
+      <button class="copy" id="session-copy" type="button">Copy results</button>
+      <button class="start" id="session-next" type="button">Next</button>
+    </div>
+    <textarea class="report" id="session-report" readonly hidden aria-label="Session results, to copy" rows="7"></textarea>
   </div>
 </section>
 
@@ -574,12 +593,16 @@ function makeLabels(n) {
   return shuffle(TERM_NAMES.slice()).slice(0, n);
 }
 
-/* Two modes. Simple: three terms on a 3 x 3 board. Complex: four terms on a 5 x 5 board and five statements, the
-   third of which compares two distances (Closer / Farther). In the code they are levels 1 and 3. Both boards have
-   an odd number of squares, so there is a centre square and every compass line runs through the middle of one. */
-const SIMPLE = 1, COMPLEX = 3;
-const GRADES = [SIMPLE, COMPLEX];
-const boardSize = (level) => level === COMPLEX ? 5 : 3;
+/* Three modes, shown as one, two and three stars. In the code they are levels 1, 2 and 3.
+     1 (Simple)   three terms on a 3 x 3 board, three statements.
+     2 (Medium)   three terms on a 5 x 5 board, four statements: Simple's three, plus one that compares two
+                  distances (Closer / Farther).
+     3 (Complex)  four terms on a 5 x 5 board, five statements; one term, REF, is locked to its square.
+   Both boards have an odd number of squares, so there is a centre square and every compass line runs through the
+   middle of one. */
+const SIMPLE = 1, MEDIUM = 2, COMPLEX = 3;
+const GRADES = [SIMPLE, MEDIUM, COMPLEX];
+const boardSize = (level) => level === SIMPLE ? 3 : 5;
 const termCount = (level) => level === COMPLEX ? 4 : 3;
 
 /* Distance across the board between two placements: the squares only, never the tier. Returned three ways:
@@ -604,6 +627,9 @@ function nearWords(s) { return s.closer ? ['is ', 'Closer', ' to'] : ['is ', 'Fa
      Closer to B than C is    straight-line distance across the board to B, compared with C's; the tier never counts
    Simple has three terms in the 3 x 3 x 3 cube and one statement for each pair of them: one about height, one a
    compass direction (any of the eight), and a third that pairs Above/Below with a compass direction.
+   Medium has the same three terms and statements on a 5 x 5 board, with a Closer / Farther statement added as the
+   third of four. It never says Directly: with only three terms, two sharing a square by rule would settle the
+   comparison on their own.
    Complex has four terms on a 5 x 5 board and five statements: height, compass, a third that is Closer / Farther,
    a fourth that pairs height with a compass direction, and a fifth compass direction that closes a loop between
    three of the terms. The compass letter shown by the board is always one of the eight that no statement uses. */
@@ -611,8 +637,8 @@ function makePuzzle(level) {
   level = GRADES.includes(level) ? level : SIMPLE;
   const count = termCount(level), size = boardSize(level);
   /* whether the height statement says Directly is settled first, so half the questions say it however many
-     tries each kind takes */
-  const direct = coin();
+     tries each kind takes (Medium never says it) */
+  const direct = level === MEDIUM ? false : coin();
   for (;;) {
     const made = tryPuzzle(level, count, size, direct);
     if (made) return made;
@@ -635,15 +661,15 @@ function tryPuzzle(level, count, size, direct) {
     rAt = square();
     d = bearing([rAt[0] - pAt[0], rAt[1] - pAt[1], 0], o);
   } while (same(pAt, rAt) || (d[0] === 0 || d[1] === 0) !== straight);
-  /* Q: on P's own square when its statement will say Directly. Otherwise, in Simple, any square but R's (its
-     other statement gives a compass direction from R); in Complex, any square at all. */
+  /* Q: on P's own square when its statement will say Directly. Otherwise, with three terms, any square but R's
+     (its other statement gives a compass direction from R); in Complex, any square at all. */
   let qAt = pAt;
-  if (!direct) do { qAt = square(); } while (level === SIMPLE && same(qAt, rAt));
+  if (!direct) do { qAt = square(); } while (level !== COMPLEX && same(qAt, rAt));
   const P = labels[0], Q = labels[1], R = labels[2], S = labels[3];
   const solution = {};
   const pTier = randInt(LEVELS), rTier = randInt(LEVELS);
   let qTier;
-  if (level === SIMPLE) qTier = pick([0, 1, 2].filter((z) => z !== pTier && z !== rTier));   // Q differs from both: each of its statements says Above or Below
+  if (level !== COMPLEX) qTier = pick([0, 1, 2].filter((z) => z !== pTier && z !== rTier));   // Q differs from both: each of its statements says Above or Below
   else qTier = pick([0, 1, 2].filter((z) => z !== pTier));
   solution[P] = [pAt[0], pAt[1], pTier];
   solution[Q] = [qAt[0], qAt[1], qTier];
@@ -673,7 +699,24 @@ function tryPuzzle(level, count, size, direct) {
   if (level === COMPLEX) { hue[REF] = 3; pin[REF] = [solution[REF][0], solution[REF][1]]; }
   let premises = shuffle([tell(Q, P, false, true, direct), tell(R, P, true, false, false)]);
   if (level === SIMPLE) premises.push(tell(Q, R, true, true, false));
-  else {
+  else if (level === MEDIUM) {
+    /* the third statement: one term is Closer to (or Farther from) a second than the third is, where that is clear
+       however the distance is counted. The fourth is Simple's third: Q against R, height and compass together. */
+    const options = [];
+    for (const hub of labels) for (const a of labels) for (const c of labels) {
+      if (a !== hub && c !== hub && a !== c && clearlyCloser(solution[a], solution[hub], solution[c])) options.push([a, hub, c]);
+    }
+    if (!options.length) return null;
+    const [a, hub, c] = pick(options);
+    premises.push(coin() ? { kind: 'near', subject: a, anchor: hub, other: c, closer: true, dir: [0, 0, 0] }
+      : { kind: 'near', subject: c, anchor: hub, other: a, closer: false, dir: [0, 0, 0] });
+    premises.push(tell(Q, R, true, true, false));
+    /* every statement has to earn its place: of the layouts that satisfy the rest, Closer / Farther must rule
+       out at least half, and each of the others at least a quarter */
+    const probe = { o, size, names: [P, R, Q], premises, pin };
+    const all = countFits(probe, -1);
+    for (const i of [2, 0, 1, 3]) if (all > (i === 2 ? 0.5 : 0.75) * countFits(probe, i)) return null;
+  } else {
     /* the third statement: one term is Closer to (or Farther from) a second than a third is. Only comparisons
        that are clear however the distance is counted are used. It never compares two terms that share a square
        by rule (Directly), and when no statement gives Q a compass direction it always involves Q. */
@@ -705,7 +748,7 @@ function tryPuzzle(level, count, size, direct) {
   const given = pick(spare);
   /* the order of the term buttons: shuffled, with REF last (the bottom of the column, or the bottom right on a phone) */
   const names = shuffle(labels.filter((w) => !pin[w])).concat(Object.keys(pin));
-  return { v: 11, level, o, given, spare, size, names, hue, pin, premises, solution, fixed: [], threeD: true };
+  return { v: 12, level, o, given, spare, size, names, hue, pin, premises, solution, fixed: [], threeD: true };
 }
 /* does one statement hold for its terms' placements ([x, y, tier] each; c only for Closer / Farther) */
 function holds(p, o, s, a, c) {
@@ -1409,6 +1452,10 @@ function showScreen(name) {
   if (name === 'setup') drawPrefs();
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();   // Enter then starts the session, or moves on
 }
+/* the three modes are shown as one, two or three stars (drawn, so a phone never swaps them for emoji) */
+const STAR = '<svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 6.2 6.7.8-5 4.6 1.4 6.7-6-3.4-6 3.4 1.4-6.7-5-4.6 6.7-.8z"/></svg>';
+const stars = (n) => '<span class="stars">' + STAR.repeat(n) + '</span>';
+document.querySelectorAll('#opt-mode button').forEach((b) => { b.innerHTML = stars(+b.dataset.value); });
 /* the settings screen */
 function drawPrefs() {
   const mark = (id, value) => document.querySelectorAll('#' + id + ' button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === String(value))));
@@ -1427,7 +1474,7 @@ function minutesTyped() {
 }
 {
   const choose = (id, set) => $(id).addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; set(b.dataset.value); savePrefs(); drawPrefs(); });
-  choose('opt-mode', (v) => { prefs.mode = +v === COMPLEX ? COMPLEX : SIMPLE; });
+  choose('opt-mode', (v) => { prefs.mode = GRADES.includes(+v) ? +v : SIMPLE; });
   choose('opt-grid', (v) => { prefs.gridShuffle = v === '1'; });
   choose('opt-dirs', (v) => { prefs.dirShuffle = v === '1'; });
   const box = $('opt-minutes');
@@ -1438,6 +1485,29 @@ function minutesTyped() {
   box.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); box.blur(); startSession(); } });
   $('session-start').addEventListener('click', startSession);
   $('session-next').addEventListener('click', () => showScreen('setup'));
+  /* Copy results: onto the clipboard if the browser allows it; if not, the text is shown, selected, to copy by hand */
+  let copied = null;
+  const said = (ok) => {
+    const b = $('session-copy');
+    b.textContent = ok ? 'Copied' : 'Select and copy';
+    b.classList.toggle('done', ok);
+    clearTimeout(copied);
+    if (ok) copied = setTimeout(() => { b.textContent = 'Copy results'; b.classList.remove('done'); }, 1600);
+  };
+  const byHand = (text) => {
+    const box = $('session-report');
+    box.value = text; box.hidden = false; box.focus(); box.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    if (ok) box.hidden = true;                              // it worked the old way: no need to show the text
+    said(ok);
+  };
+  $('session-copy').addEventListener('click', () => {
+    const text = session && session.report;
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => said(true), () => byHand(text));
+    else byHand(text);
+  });
 }
 
 /* The time actually played so far this session, in ms: it stands still while the timer is paused, and it carries on
@@ -1543,7 +1613,7 @@ function endSession(why) {
   session.why = session.timeUp ? 'time' : why;
   const log = session.log, right = log.filter((q) => q.right).length;
   $('done-title').textContent = session.why === 'time' ? 'Session complete' : 'Session aborted';
-  $('done-mode').textContent = (session.mode === COMPLEX ? 'Complex' : 'Simple') + ' · grid shuffle ' + (prefs.gridShuffle ? 'on' : 'off') + ' · direction shuffle ' + (prefs.dirShuffle ? 'on' : 'off');
+  $('done-mode').innerHTML = '<span role="img" aria-label="' + session.mode + (session.mode === 1 ? ' star' : ' stars') + '">' + stars(session.mode) + '</span> · grid shuffle ' + (prefs.gridShuffle ? 'on' : 'off') + ' · direction shuffle ' + (prefs.dirShuffle ? 'on' : 'off');
   $('done-pct').textContent = log.length ? Math.round(100 * right / log.length) + '%' : '–';
   $('done-right').textContent = right;
   $('done-total').textContent = 'of ' + log.length;
@@ -1553,6 +1623,20 @@ function endSession(why) {
     '<span role="img" aria-label="' + (q.right ? 'right' : 'wrong') + '">' + (q.right ? ICONS.check : ICONS.clear) + '</span><span class="t">' + clockText(q.ms) + '</span></li>').join('')
     : '<li class="none">No questions answered.</li>';
   $('done-log').scrollTop = 0;
+  /* the same result as a few lines of plain text, for Copy results */
+  const mins = +(session.length / 60000).toFixed(2), wrong = log.length - right;
+  session.report = [
+    mins + 'min isoRRT Session' + (session.why === 'time' ? '' : ' (aborted at ' + clockText(spent) + ')'),
+    'Mode: ' + '★'.repeat(session.mode),
+    'Accuracy: ' + (log.length ? Math.round(100 * right / log.length) + '%' : '–'),
+    'Questions: ' + log.length + ' (Mistakes: ' + wrong + ')',
+    'Average time: ' + (log.length ? clockText(log.reduce((sum, q) => sum + q.ms, 0) / log.length) + ' per question' : '–'),
+    'Grid shuffle: ' + (prefs.gridShuffle ? 'Enabled' : 'Disabled'),
+    'Direction shuffle: ' + (prefs.dirShuffle ? 'Enabled' : 'Disabled')
+  ].join('\n');
+  $('session-report').hidden = true;
+  $('session-copy').textContent = 'Copy results';
+  $('session-copy').classList.remove('done');
   drawTimer();
   showScreen('done');
 }
