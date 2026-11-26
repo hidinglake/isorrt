@@ -2,7 +2,7 @@
 
 A relational reasoning trainer where you build the answer instead of judging it.
 
-**Play it:** https://hidinglake.github.io/iso-rrt/
+**Play it:** https://hidinglake.github.io/isorrt/
 
 You get three statements about three terms, such as *"MEH is Directly Above SUN"*, *"MEH is East of LUL"* and *"LUL is Above and West of SUN"*. You don't answer true or false. You place three coloured tiles on a small isometric board so that every statement holds. The board keeps turning while you work, and one compass label is your only fixed reference.
 
